@@ -1,0 +1,22 @@
+# Build
+bin/
+obj/
+
+# VS
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# Publish outputs
+**/publish/
+
+# Crash dumps
+*.dmp
