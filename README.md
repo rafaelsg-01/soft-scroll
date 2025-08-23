@@ -2,12 +2,11 @@
 
 ## Download
 
-- One-click download (Windows):
-  - https://github.com/rafaelsg-01/soft-scroll/releases/latest/download/SoftScroll.exe
-- If the direct link fails, open the Releases page and download the latest `.exe`:
-  - https://github.com/rafaelsg-01/soft-scroll/releases/latest
+One-click download (Windows):
 
-Note: Because the executable is not code-signed, Windows SmartScreen may warn on first run. Click �More info� ? �Run anyway�.
+https://github.com/rafaelsg-01/soft-scroll/releases/latest/download/SoftScroll.exe
+
+Note: Because the executable is not code-signed, Windows SmartScreen may warn on first run. Click “More info” → “Run anyway”.
 
 ---
 
@@ -39,7 +38,7 @@ Soft Scroll is a small Windows utility that adds smooth, configurable scrolling 
 - Tray app: left-click opens settings, right-click shows menu (Enable, Exit)
 - Settings window opens automatically on first run
 
-> This project is not affiliated with any commercial tool named �SmoothScroll�.
+> This project is not affiliated with any commercial tool named “SmoothScroll”.
 
 ## How it works
 
@@ -82,7 +81,7 @@ Configuration file:
 %AppData%/SoftScroll/settings.json
 ```
 
-Use the �Reset All� button to restore defaults.
+Use the “Reset All” button to restore defaults.
 
 ## Known limitations
 
