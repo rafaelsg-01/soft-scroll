@@ -21,12 +21,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Assets\app.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\logo.svg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <!-- Embed as Resource for pack URI -->
+    <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\logo.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include=".github\workflows\" />
   </ItemGroup>
 
   <!-- Kill any running instance before build to avoid file lock -->

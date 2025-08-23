@@ -23,6 +23,20 @@ Soft Scroll is a small Windows utility that adds smooth, configurable scrolling 
 3) Left-click the tray icon to open Settings.
 4) Adjust parameters and click Save. Closing the window keeps the app running in the tray.
 
+## Build a single-file .exe into /dist
+
+Run this once to create a portable single-file exe in the project root `dist/` folder:
+
+```
+dotnet publish -p:PublishProfile=Properties/PublishProfiles/SoftScrollSingleFile.pubxml
+```
+
+The output will be:
+
+```
+./dist/SoftScroll.exe
+```
+
 ## Features
 
 - Smooth wheel scrolling with adjustable parameters:
@@ -44,7 +58,7 @@ Soft Scroll is a small Windows utility that adds smooth, configurable scrolling 
 
 Soft Scroll installs a low-level mouse hook (WH_MOUSE_LL). When a wheel event is detected, the original event is swallowed and a small background engine emits multiple smaller wheel pulses over time (via `SendInput`), applying an ease-out animation. Apps (browsers, explorer, editors) accumulate those deltas like regular scrolling, which feels much smoother.
 
-## Build from source
+## Build from source (alternative)
 
 Requirements: .NET 8 SDK, Windows 10/11.
 
@@ -52,16 +66,10 @@ Requirements: .NET 8 SDK, Windows 10/11.
 - Open in Visual Studio 2022 (or run `dotnet build`)
 - Run (F5)
 
-Publish a single-file executable:
+Manual publish (equivalent to the profile):
 
 ```
-dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true -p:SelfContained=true
-```
-
-The exe will be at:
-
-```
-bin/Release/net8.0-windows/win-x64/publish/SoftScroll.exe
+dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true -p:SelfContained=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:DebugSymbols=false -o ./dist
 ```
 
 ## Settings (suggested defaults)

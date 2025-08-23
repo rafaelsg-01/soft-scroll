@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
@@ -52,14 +53,26 @@ public sealed class TrayIcon : IDisposable
 
     private static System.Drawing.Icon LoadIconSafe()
     {
+        // 1) Try WPF embedded resource (works in single-file publish)
         try
         {
-            var exeDir = AppDomain.CurrentDomain.BaseDirectory;
-            var icoPath = Path.Combine(exeDir, "Assets", "app.ico");
-            if (File.Exists(icoPath))
-                return new System.Drawing.Icon(icoPath);
+            var uri = new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute);
+            var sri = System.Windows.Application.GetResourceStream(uri);
+            if (sri != null)
+                return new System.Drawing.Icon(sri.Stream);
         }
         catch { }
+
+        // 2) Fallback to EXE associated icon (uses ApplicationIcon)
+        try
+        {
+            var exePath = Process.GetCurrentProcess().MainModule!.FileName!;
+            var ico = System.Drawing.Icon.ExtractAssociatedIcon(exePath);
+            if (ico != null) return ico;
+        }
+        catch { }
+
+        // 3) Last resort: default app icon
         return System.Drawing.SystemIcons.Application;
     }
 
