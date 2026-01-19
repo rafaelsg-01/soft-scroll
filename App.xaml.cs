@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 
-namespace SmoothScrollClone
+namespace SoftScroll
 {
     public partial class App : System.Windows.Application
     {
@@ -10,43 +11,62 @@ namespace SmoothScrollClone
         private SettingsViewModel? _vm;
         private SmoothScrollEngine? _engine;
         private SettingsWindow? _settingsWindow;
+        private AppSettings _settings = null!;
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            var settings = AppSettings.Load();
-            _vm = new SettingsViewModel(settings);
+            _settings = AppSettings.Load();
+            _vm = new SettingsViewModel(_settings);
             _vm.SettingsChanged += (_, __) =>
             {
                 _tray?.UpdateEnabled(_vm.Enabled);
-                if (_engine != null) _engine.ApplySettings(_vm.Snapshot());
+                var snapshot = _vm.Snapshot();
+                _settings = snapshot;
+                if (_engine != null) _engine.ApplySettings(snapshot);
+                if (_hook != null) _hook.ShiftKeyHorizontal = snapshot.ShiftKeyHorizontal;
             };
 
-            _tray = new TrayIcon(settings);
+            _tray = new TrayIcon(_settings);
             _tray.OpenSettingsRequested += (_, __) => ShowSettingsWindow();
             _tray.ExitRequested += (_, __) => Shutdown();
             _tray.EnabledToggled += (_, enabled) =>
             {
                 if (_vm is null) return;
                 _vm.Enabled = enabled;
-                settings.Enabled = enabled;
-                settings.Save();
+                _settings.Enabled = enabled;
+                _settings.Save();
                 UpdateHookState();
             };
 
-            _engine = new SmoothScrollEngine(settings);
+            _engine = new SmoothScrollEngine(_settings);
 
             _hook = new GlobalMouseHook();
+            _hook.ShiftKeyHorizontal = _settings.ShiftKeyHorizontal;
+
             _hook.MouseWheel += (_, args) =>
             {
-                if (!settings.Enabled) return;
+                if (!_settings.Enabled) return;
+
+                // Check per-app exclusion list - use window under cursor for accurate detection
+                var foregroundProcess = ProcessHelper.GetProcessUnderCursor();
+                if (_settings.IsExcluded(foregroundProcess))
+                {
+                    return; // Skip smooth scrolling, let original event pass through
+                }
+
                 args.Handled = true;
                 _engine!.OnWheel(args.Delta);
             };
             _hook.MouseHWheel += (_, args) =>
             {
-                if (!settings.Enabled) return;
+                if (!_settings.Enabled) return;
+
+                // Check per-app exclusion list - use window under cursor
+                var foregroundProcess = ProcessHelper.GetProcessUnderCursor();
+                if (_settings.IsExcluded(foregroundProcess)) return;
+
                 args.Handled = true;
                 _engine!.OnHWheel(args.Delta);
             };
@@ -63,7 +83,9 @@ namespace SmoothScrollClone
             if (_hook is null || _vm is null || _engine is null) return;
             if (_vm.Enabled)
             {
-                _engine.ApplySettings(_vm.Snapshot());
+                var snapshot = _vm.Snapshot();
+                _engine.ApplySettings(snapshot);
+                _hook.ShiftKeyHorizontal = snapshot.ShiftKeyHorizontal;
                 _engine.Start();
                 _hook.Install();
             }

@@ -1,47 +1,151 @@
-<Window x:Class="SmoothScrollClone.SettingsWindow"
+<Window x:Class="SoftScroll.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Soft Scroll - Configuracoes" Height="540" Width="760"
-        WindowStartupLocation="CenterScreen">
+        Title="Soft Scroll - Settings" Height="640" Width="760"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BackgroundBrush}">
     <Window.Resources>
-        <SolidColorBrush x:Key="AccentBrush" Color="#1089FF"/>
-        <SolidColorBrush x:Key="PanelBrush" Color="#0F1929"/>
-        <SolidColorBrush x:Key="PanelBorderBrush" Color="#1F2B40"/>
-        <SolidColorBrush x:Key="TextBrush" Color="#E6F1FF"/>
+        <!-- Default dark theme colors (will be updated by code) -->
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#1A1A1A"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#252525"/>
+        <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#3A3A3A"/>
+        <SolidColorBrush x:Key="TextBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B0B0B0"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="InputBrush" Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="InputBorderBrush" Color="#404040"/>
+        
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         </Style>
-        <!-- Simple prettier TextBox style -->
         <Style TargetType="TextBox">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="Background" Value="#0B1422"/>
-            <Setter Property="BorderBrush" Value="#22314A"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource InputBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Padding" Value="8,6"/>
             <Setter Property="Margin" Value="8"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="MinWidth" Value="160"/>
+            <Setter Property="MinWidth" Value="140"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/>
             <Style.Triggers>
                 <Trigger Property="IsKeyboardFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
         <Style TargetType="Button">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,8"/>
             <Setter Property="Margin" Value="8,0,0,0"/>
-            <Setter Property="MinWidth" Value="100"/>
+            <Setter Property="MinWidth" Value="80"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="MinWidth" Value="80"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="Margin" Value="6"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Margin" Value="0,6"/>
+        </Style>
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="{DynamicResource InputBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+        </Style>
+        
+        <!-- Modern Scrollbar Styles -->
+        <Style x:Key="ScrollBarThumb" TargetType="Thumb">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Background="{DynamicResource SurfaceBorderBrush}" CornerRadius="4" Margin="2"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="ScrollBarRepeatButton" TargetType="RepeatButton">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Rectangle Fill="Transparent"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style TargetType="ScrollBar">
+            <Setter Property="Stylus.IsPressAndHoldEnabled" Value="False"/>
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="MinWidth" Value="10"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="{DynamicResource InputBrush}">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource ScrollBarRepeatButton}" Command="ScrollBar.PageUpCommand"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource ScrollBarRepeatButton}" Command="ScrollBar.PageDownCommand"/>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource ScrollBarThumb}"/>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Width" Value="Auto"/>
+                    <Setter Property="MinWidth" Value="0"/>
+                    <Setter Property="Height" Value="10"/>
+                    <Setter Property="MinHeight" Value="10"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid Background="{DynamicResource InputBrush}">
+                                    <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Style="{StaticResource ScrollBarRepeatButton}" Command="ScrollBar.PageLeftCommand"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Style="{StaticResource ScrollBarRepeatButton}" Command="ScrollBar.PageRightCommand"/>
+                                        </Track.IncreaseRepeatButton>
+                                        <Track.Thumb>
+                                            <Thumb Style="{StaticResource ScrollBarThumb}"/>
+                                        </Track.Thumb>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
 
-    <Grid Background="#0A1220">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -49,68 +153,106 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Background="#0D1A2E" Padding="16">
+        <Border Background="{DynamicResource SurfaceBrush}" Padding="20,16" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
-                <TextBlock Text="Soft Scroll (All Applications)" FontSize="18" FontWeight="SemiBold"/>
-                <Button Content="Reset All" HorizontalAlignment="Right" Click="OnResetDefaults"/>
+                <TextBlock Text="Soft Scroll" FontSize="20" FontWeight="SemiBold"/>
+                <TextBlock Text=" — Settings" FontSize="20" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Button Content="Reset All" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Right" Click="OnResetDefaults"/>
             </DockPanel>
         </Border>
 
         <!-- Content -->
         <ScrollViewer Grid.Row="1">
-            <Grid Margin="24">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="2*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+            <StackPanel Margin="24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- Left column: numeric settings -->
-                <Border Grid.Column="0" Padding="16" Background="{StaticResource PanelBrush}" CornerRadius="8" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1">
-                    <UniformGrid Columns="2" Rows="5" Margin="4">
-                        <TextBlock Text="Step size [px]" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding StepSizePx, UpdateSourceTrigger=PropertyChanged}" 
-                                 PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
+                    <!-- Left column: numeric settings -->
+                    <Border Grid.Column="0" Padding="20" Background="{DynamicResource SurfaceBrush}" CornerRadius="8" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Scroll Parameters" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                            
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Step size (px)" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding StepSizePx, UpdateSourceTrigger=PropertyChanged}" 
+                                         PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
+                                
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Animation time (ms)" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding AnimationTimeMs, UpdateSourceTrigger=PropertyChanged}"
+                                         PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
+                                
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Acceleration delta (ms)" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding AccelerationDeltaMs, UpdateSourceTrigger=PropertyChanged}"
+                                         PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
+                                
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Acceleration max (×)" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AccelerationMax, UpdateSourceTrigger=PropertyChanged}"
+                                         PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
+                                
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Tail to head ratio (×)" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding TailToHeadRatio, UpdateSourceTrigger=PropertyChanged}"
+                                         PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
 
-                        <TextBlock Text="Animation time [ms]" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding AnimationTimeMs, UpdateSourceTrigger=PropertyChanged}"
-                                 PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
+                    <!-- Right column: toggles -->
+                    <Border Grid.Column="1" Padding="20" Background="{DynamicResource SurfaceBrush}" CornerRadius="8" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" Margin="16,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Options" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                            <CheckBox Content="Enabled" IsChecked="{Binding Enabled}"/>
+                            <CheckBox Content="Animation easing" IsChecked="{Binding AnimationEasing}"/>
+                            <CheckBox Content="Shift key for horizontal scroll" IsChecked="{Binding ShiftKeyHorizontal}"/>
+                            <CheckBox Content="Smooth horizontal scrolling" IsChecked="{Binding HorizontalSmoothness}"/>
+                            <CheckBox Content="Reverse wheel direction" IsChecked="{Binding ReverseWheelDirection}"/>
+                            <CheckBox Content="Start with Windows" IsChecked="{Binding StartWithWindows}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
 
-                        <TextBlock Text="Acceleration delta [ms]" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding AccelerationDeltaMs, UpdateSourceTrigger=PropertyChanged}"
-                                 PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
-
-                        <TextBlock Text="Acceleration max [x]" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding AccelerationMax, UpdateSourceTrigger=PropertyChanged}"
-                                 PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
-
-                        <TextBlock Text="Tail to head ratio [x]" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding TailToHeadRatio, UpdateSourceTrigger=PropertyChanged}"
-                                 PreviewTextInput="NumericOnly" DataObject.Pasting="OnPasteNumeric"/>
-                    </UniformGrid>
-                </Border>
-
-                <!-- Right column: toggles -->
-                <Border Grid.Column="1" Padding="16" Background="{StaticResource PanelBrush}" CornerRadius="8" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Margin="16,0,0,0">
+                <!-- Excluded Apps Section -->
+                <Border Margin="0,16,0,0" Padding="20" Background="{DynamicResource SurfaceBrush}" CornerRadius="8" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1">
                     <StackPanel>
-                        <CheckBox Content="Enable for all apps by default" IsChecked="{Binding Enabled}"/>
-                        <CheckBox Content="Animation easing" IsChecked="{Binding AnimationEasing}"/>
-                        <CheckBox Content="Shift key horizontal scrolling" IsChecked="{Binding ShiftKeyHorizontal}"/>
-                        <CheckBox Content="Horizontal smoothness" IsChecked="{Binding HorizontalSmoothness}"/>
-                        <CheckBox Content="Reverse wheel direction" IsChecked="{Binding ReverseWheelDirection}"/>
+                        <TextBlock Text="Excluded Applications" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock Text="Smooth scrolling will be disabled for these apps. Focus on an app before opening Settings, then click Add." 
+                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12" TextWrapping="Wrap"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ListBox x:Name="ExcludedAppsList" Height="100" ItemsSource="{Binding ExcludedApps}"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Top" Margin="8,0,0,0">
+                                <Button Content="Add" Click="OnAddApp" Style="{StaticResource SecondaryButton}" Margin="0"/>
+                                <Button Content="Remove" Click="OnRemoveApp" Style="{StaticResource SecondaryButton}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
-            </Grid>
+            </StackPanel>
         </ScrollViewer>
 
         <!-- Footer -->
-        <DockPanel Grid.Row="2" Margin="16">
+        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" Padding="16" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Salvar" IsDefault="True" Click="OnSave"/>
-                <Button Content="Fechar" Click="OnCloseClicked"/>
+                <Button Content="Save" IsDefault="True" Click="OnSave"/>
+                <Button Content="Close" Style="{StaticResource SecondaryButton}" Click="OnCloseClicked"/>
             </StackPanel>
-        </DockPanel>
+        </Border>
     </Grid>
 </Window>

@@ -1,13 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace SmoothScrollClone;
+namespace SoftScroll;
 
 public sealed class SettingsViewModel : INotifyPropertyChanged
 {
     public SettingsViewModel(AppSettings settings)
     {
+        ExcludedApps = new ObservableCollection<string>();
         Apply(settings);
     }
 
@@ -24,6 +27,10 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         HorizontalSmoothness = s.HorizontalSmoothness;
         ReverseWheelDirection = s.ReverseWheelDirection;
         StartWithWindows = s.StartWithWindows;
+
+        ExcludedApps.Clear();
+        foreach (var app in s.ExcludedApps)
+            ExcludedApps.Add(app);
     }
 
     public AppSettings Snapshot() => new()
@@ -38,7 +45,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         ShiftKeyHorizontal = ShiftKeyHorizontal,
         HorizontalSmoothness = HorizontalSmoothness,
         ReverseWheelDirection = ReverseWheelDirection,
-        StartWithWindows = StartWithWindows
+        StartWithWindows = StartWithWindows,
+        ExcludedApps = new List<string>(ExcludedApps)
     };
 
     private bool _enabled;
@@ -73,6 +81,27 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
     private bool _startWithWindows;
     public bool StartWithWindows { get => _startWithWindows; set { if (Set(ref _startWithWindows, value)) OnSettingsChanged(); } }
+
+    // Per-app exclusion list
+    public ObservableCollection<string> ExcludedApps { get; }
+
+    public void AddExcludedApp(string appName)
+    {
+        if (string.IsNullOrWhiteSpace(appName)) return;
+        if (!ExcludedApps.Contains(appName, StringComparer.OrdinalIgnoreCase))
+        {
+            ExcludedApps.Add(appName);
+            OnSettingsChanged();
+        }
+    }
+
+    public void RemoveExcludedApp(string appName)
+    {
+        if (ExcludedApps.Remove(appName))
+        {
+            OnSettingsChanged();
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler? SettingsChanged;

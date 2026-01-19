@@ -10,11 +10,11 @@
 
     <!-- Branding -->
     <AssemblyName>SoftScroll</AssemblyName>
-    <RootNamespace>SmoothScrollClone</RootNamespace>
+    <RootNamespace>SoftScroll</RootNamespace>
     <Product>Soft Scroll</Product>
     <Company>Soft Scroll</Company>
     <Description>Soft Scroll brings smooth, configurable scrolling to Windows.</Description>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
 
     <!-- App executable icon -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
@@ -32,7 +32,7 @@
 
   <!-- Kill any running instance before build to avoid file lock -->
   <Target Name="KillRunningInstance" BeforeTargets="BeforeBuild">
-    <Exec Command="taskkill /F /IM $(AssemblyName).exe /T" IgnoreExitCode="true" />
+    <Exec Command="taskkill /F /IM $(AssemblyName).exe /T 2>nul" IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" />
   </Target>
 
 </Project>

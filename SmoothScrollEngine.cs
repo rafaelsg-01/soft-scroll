@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace SmoothScrollClone;
+namespace SoftScroll;
 
 public sealed class SmoothScrollEngine : IDisposable
 {

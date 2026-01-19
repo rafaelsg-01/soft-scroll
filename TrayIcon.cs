@@ -1,11 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Windows;
 using System.Windows.Forms;
 
-namespace SmoothScrollClone;
+namespace SoftScroll;
 
 public sealed class TrayIcon : IDisposable
 {
@@ -24,13 +22,13 @@ public sealed class TrayIcon : IDisposable
     {
         _settings = settings;
 
-        _openSettingsItem = new ToolStripMenuItem("Configuracoes...");
+        _openSettingsItem = new ToolStripMenuItem("Settings...");
         _openSettingsItem.Click += (s, e) => OpenSettingsRequested?.Invoke(this, EventArgs.Empty);
 
-        _enabledItem = new ToolStripMenuItem("Ativado") { Checked = _settings.Enabled, CheckOnClick = true };
+        _enabledItem = new ToolStripMenuItem("Enabled") { Checked = _settings.Enabled, CheckOnClick = true };
         _enabledItem.CheckedChanged += (s, e) => EnabledToggled?.Invoke(this, _enabledItem.Checked);
 
-        _exitItem = new ToolStripMenuItem("Sair");
+        _exitItem = new ToolStripMenuItem("Exit");
         _exitItem.Click += (s, e) => ExitRequested?.Invoke(this, EventArgs.Empty);
 
         var cms = new ContextMenuStrip();
@@ -61,7 +59,7 @@ public sealed class TrayIcon : IDisposable
             if (sri != null)
                 return new System.Drawing.Icon(sri.Stream);
         }
-        catch { }
+        catch (Exception ex) { Debug.WriteLine($"[TrayIcon] Failed to load embedded icon: {ex.Message}"); }
 
         // 2) Fallback to EXE associated icon (uses ApplicationIcon)
         try
@@ -70,7 +68,7 @@ public sealed class TrayIcon : IDisposable
             var ico = System.Drawing.Icon.ExtractAssociatedIcon(exePath);
             if (ico != null) return ico;
         }
-        catch { }
+        catch (Exception ex) { Debug.WriteLine($"[TrayIcon] Failed to extract EXE icon: {ex.Message}"); }
 
         // 3) Last resort: default app icon
         return System.Drawing.SystemIcons.Application;

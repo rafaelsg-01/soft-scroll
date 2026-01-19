@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace SmoothScrollClone;
+namespace SoftScroll;
 
 public sealed class MouseWheelEventArgs : EventArgs
 {
@@ -18,6 +18,11 @@ public sealed class GlobalMouseHook : IDisposable
     private HookProc? _proc;
 
     public bool IsInstalled => _hook != IntPtr.Zero;
+
+    /// <summary>
+    /// When true, holding Shift will convert vertical scroll to horizontal.
+    /// </summary>
+    public bool ShiftKeyHorizontal { get; set; } = true;
 
     public event EventHandler<MouseWheelEventArgs>? MouseWheel;
     public event EventHandler<MouseWheelEventArgs>? MouseHWheel;
@@ -55,7 +60,17 @@ public sealed class GlobalMouseHook : IDisposable
             {
                 int delta = (short)((data.mouseData >> 16) & 0xffff);
                 var args = new MouseWheelEventArgs(delta);
-                MouseWheel?.Invoke(this, args);
+
+                // If Shift is held and ShiftKeyHorizontal is enabled, route to horizontal
+                if (ShiftKeyHorizontal && IsShiftPressed())
+                {
+                    MouseHWheel?.Invoke(this, args);
+                }
+                else
+                {
+                    MouseWheel?.Invoke(this, args);
+                }
+
                 if (args.Handled)
                     return (IntPtr)1; // swallow
             }
@@ -72,6 +87,12 @@ public sealed class GlobalMouseHook : IDisposable
     }
 
     public void Dispose() => Uninstall();
+
+    private static bool IsShiftPressed()
+    {
+        const int VK_SHIFT = 0x10;
+        return (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+    }
 
     private delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -103,4 +124,7 @@ public sealed class GlobalMouseHook : IDisposable
 
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
 }
