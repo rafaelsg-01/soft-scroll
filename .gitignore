@@ -20,3 +20,6 @@ obj/
 
 # Crash dumps
 *.dmp
+
+# Distribution folders
+dist/
