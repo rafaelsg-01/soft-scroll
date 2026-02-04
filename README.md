@@ -47,8 +47,10 @@ The output will be:
   - Tail to head ratio [x]
   - Animation easing (on/off)
   - Horizontal smoothness (on/off)
-  - Shift key to force horizontal scrolling (planned)
+  - Shift key to force horizontal scrolling
   - Reverse wheel direction
+- Start with Windows (auto-launch on login)
+- Per-app exclusion list (disable smooth scrolling for specific apps)
 - Tray app: left-click opens settings, right-click shows menu (Enable, Exit)
 - Settings window opens automatically on first run
 
@@ -93,9 +95,7 @@ Use the “Reset All” button to restore defaults.
 
 ## Known limitations
 
-- Some games or full-screen apps may not like injected wheel events. Consider exiting the app while gaming.
-- Per-app include/exclude list is not implemented yet.
-- Start with Windows is not implemented yet.
+- Some games or full-screen apps may not like injected wheel events. Consider adding them to the exclusion list or exiting the app while gaming.
 
 ## Contributing
 

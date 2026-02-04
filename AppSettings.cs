@@ -1,15 +1,17 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 
-namespace SmoothScrollClone;
+namespace SoftScroll;
 
 public sealed class AppSettings
 {
     // Master enable
     public bool Enabled { get; set; } = true;
 
-    // SmoothScroll-like options
+    // SmoothScroll-compatible defaults
     public int StepSizePx { get; set; } = 120;            // Step size [px]
     public int AnimationTimeMs { get; set; } = 360;       // Animation time [ms]
     public int AccelerationDeltaMs { get; set; } = 70;    // Accel window [ms]
@@ -22,6 +24,9 @@ public sealed class AppSettings
     public bool ReverseWheelDirection { get; set; } = false;        // Reverse scroll
 
     public bool StartWithWindows { get; set; } = false;
+
+    // Per-app exclusion list
+    public List<string> ExcludedApps { get; set; } = new();
 
     public static AppSettings CreateDefault() => new();
 
@@ -44,7 +49,10 @@ public sealed class AppSettings
                 if (s != null) return s;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[AppSettings] Failed to load settings: {ex.Message}");
+        }
         return CreateDefault();
     }
 
@@ -56,6 +64,23 @@ public sealed class AppSettings
             var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(path, json);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[AppSettings] Failed to save settings: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Checks if the given process name is in the exclusion list (case-insensitive).
+    /// </summary>
+    public bool IsExcluded(string? processName)
+    {
+        if (string.IsNullOrEmpty(processName)) return false;
+        foreach (var app in ExcludedApps)
+        {
+            if (string.Equals(app, processName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 }
