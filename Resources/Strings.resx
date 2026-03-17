@@ -61,6 +61,16 @@
   <data name="Direction" xml:space="preserve"><value>Direction</value></data>
   <data name="ReverseWheel" xml:space="preserve"><value>Reverse wheel direction</value></data>
 
+  <!-- Advanced Features -->
+  <data name="AdvancedFeatures" xml:space="preserve"><value>Advanced Features</value></data>
+  <data name="ZoomSmoothing" xml:space="preserve"><value>Smooth Ctrl+Zoom</value></data>
+  <data name="MiddleClickScroll" xml:space="preserve"><value>Enhanced middle-click scroll</value></data>
+  <data name="MomentumScrolling" xml:space="preserve"><value>Momentum Scrolling</value></data>
+  <data name="MomentumDesc" xml:space="preserve"><value>Content continues drifting after you stop scrolling.</value></data>
+  <data name="EnableMomentum" xml:space="preserve"><value>Enable momentum (inertia)</value></data>
+  <data name="Friction" xml:space="preserve"><value>Friction</value></data>
+  <data name="CurvePreview" xml:space="preserve"><value>Curve Preview</value></data>
+
   <!-- Excluded Apps Tab -->
   <data name="ExcludedAppsTitle" xml:space="preserve"><value>Excluded Apps</value></data>
   <data name="ExcludedAppsDesc" xml:space="preserve"><value>Smooth scrolling will be disabled for these applications. Focus on an app before opening Settings, then click Add.</value></data>

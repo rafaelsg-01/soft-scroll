@@ -11,6 +11,13 @@ public sealed class MouseWheelEventArgs : EventArgs
     public MouseWheelEventArgs(int delta) => Delta = delta;
 }
 
+public sealed class MousePositionEventArgs : EventArgs
+{
+    public int X { get; }
+    public int Y { get; }
+    public MousePositionEventArgs(int x, int y) { X = x; Y = y; }
+}
+
 // Low-level mouse hook with ability to mark wheel events handled
 public sealed class GlobalMouseHook : IDisposable
 {
@@ -26,6 +33,10 @@ public sealed class GlobalMouseHook : IDisposable
 
     public event EventHandler<MouseWheelEventArgs>? MouseWheel;
     public event EventHandler<MouseWheelEventArgs>? MouseHWheel;
+    public event EventHandler<MouseWheelEventArgs>? MouseZoomWheel;
+    public event EventHandler<MousePositionEventArgs>? MiddleButtonDown;
+    public event EventHandler? MiddleButtonUp;
+    public event EventHandler<MousePositionEventArgs>? MouseMoved;
 
     public void Install()
     {
@@ -61,8 +72,11 @@ public sealed class GlobalMouseHook : IDisposable
                 int delta = (short)((data.mouseData >> 16) & 0xffff);
                 var args = new MouseWheelEventArgs(delta);
 
-                // If Shift is held and ShiftKeyHorizontal is enabled, route to horizontal
-                if (ShiftKeyHorizontal && IsShiftPressed())
+                if (IsCtrlPressed())
+                {
+                    MouseZoomWheel?.Invoke(this, args);
+                }
+                else if (ShiftKeyHorizontal && IsShiftPressed())
                 {
                     MouseHWheel?.Invoke(this, args);
                 }
@@ -72,7 +86,7 @@ public sealed class GlobalMouseHook : IDisposable
                 }
 
                 if (args.Handled)
-                    return (IntPtr)1; // swallow
+                    return (IntPtr)1;
             }
             else if (msg == WM_MOUSEHWHEEL)
             {
@@ -80,7 +94,19 @@ public sealed class GlobalMouseHook : IDisposable
                 var args = new MouseWheelEventArgs(delta);
                 MouseHWheel?.Invoke(this, args);
                 if (args.Handled)
-                    return (IntPtr)1; // swallow
+                    return (IntPtr)1;
+            }
+            else if (msg == WM_MBUTTONDOWN)
+            {
+                MiddleButtonDown?.Invoke(this, new MousePositionEventArgs(data.pt.x, data.pt.y));
+            }
+            else if (msg == WM_MBUTTONUP)
+            {
+                MiddleButtonUp?.Invoke(this, EventArgs.Empty);
+            }
+            else if (msg == WM_MOUSEMOVE)
+            {
+                MouseMoved?.Invoke(this, new MousePositionEventArgs(data.pt.x, data.pt.y));
             }
         }
         return CallNextHookEx(_hook, nCode, wParam, lParam);
@@ -94,11 +120,20 @@ public sealed class GlobalMouseHook : IDisposable
         return (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
     }
 
+    private static bool IsCtrlPressed()
+    {
+        const int VK_CONTROL = 0x11;
+        return (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+    }
+
     private delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     private const int WH_MOUSE_LL = 14;
     private const int WM_MOUSEWHEEL = 0x020A;
     private const int WM_MOUSEHWHEEL = 0x020E;
+    private const int WM_MBUTTONDOWN = 0x0207;
+    private const int WM_MBUTTONUP = 0x0208;
+    private const int WM_MOUSEMOVE = 0x0200;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT { public int x; public int y; }

@@ -57,6 +57,15 @@
   <data name="Direction" xml:space="preserve"><value>Hướng</value></data>
   <data name="ReverseWheel" xml:space="preserve"><value>Đảo ngược hướng cuộn</value></data>
 
+  <data name="AdvancedFeatures" xml:space="preserve"><value>Tính năng nâng cao</value></data>
+  <data name="ZoomSmoothing" xml:space="preserve"><value>Làm mượt Ctrl+Thu phóng</value></data>
+  <data name="MiddleClickScroll" xml:space="preserve"><value>Cuộn bằng nút giữa chuột nâng cao</value></data>
+  <data name="MomentumScrolling" xml:space="preserve"><value>Cuộn quán tính</value></data>
+  <data name="MomentumDesc" xml:space="preserve"><value>Nội dung tiếp tục trôi sau khi bạn ngừng cuộn.</value></data>
+  <data name="EnableMomentum" xml:space="preserve"><value>Bật cuộn quán tính</value></data>
+  <data name="Friction" xml:space="preserve"><value>Ma sát</value></data>
+  <data name="CurvePreview" xml:space="preserve"><value>Xem trước đường cong</value></data>
+
   <data name="ExcludedAppsTitle" xml:space="preserve"><value>Ứng dụng loại trừ</value></data>
   <data name="ExcludedAppsDesc" xml:space="preserve"><value>Cuộn mượt sẽ bị tắt cho các ứng dụng này. Hãy focus vào ứng dụng trước khi mở Cài đặt, rồi nhấn Thêm.</value></data>
   <data name="AddApp" xml:space="preserve"><value>Thêm ứng dụng…</value></data>

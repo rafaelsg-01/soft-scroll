@@ -29,6 +29,11 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         ReverseWheelDirection = s.ReverseWheelDirection;
         StartWithWindows = s.StartWithWindows;
         StartMinimized = s.StartMinimized;
+        ZoomSmoothing = s.ZoomSmoothing;
+        MomentumEnabled = s.MomentumEnabled;
+        MomentumFriction = s.MomentumFriction;
+        MiddleClickScroll = s.MiddleClickScroll;
+        MiddleClickDeadZone = s.MiddleClickDeadZone;
         Language = s.Language;
 
         ExcludedApps.Clear();
@@ -52,6 +57,11 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         StartWithWindows = StartWithWindows,
         StartMinimized = StartMinimized,
         Language = Language,
+        ZoomSmoothing = ZoomSmoothing,
+        MomentumEnabled = MomentumEnabled,
+        MomentumFriction = MomentumFriction,
+        MiddleClickScroll = MiddleClickScroll,
+        MiddleClickDeadZone = MiddleClickDeadZone,
         ExcludedApps = new List<string>(ExcludedApps)
     };
 
@@ -108,6 +118,21 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
     private string _language = "en";
     public string Language { get => _language; set { if (Set(ref _language, value)) OnSettingsChanged(); } }
+
+    private bool _zoomSmoothing = true;
+    public bool ZoomSmoothing { get => _zoomSmoothing; set { if (Set(ref _zoomSmoothing, value)) OnSettingsChanged(); } }
+
+    private bool _momentumEnabled;
+    public bool MomentumEnabled { get => _momentumEnabled; set { if (Set(ref _momentumEnabled, value)) OnSettingsChanged(); } }
+
+    private int _momentumFriction = 50;
+    public int MomentumFriction { get => _momentumFriction; set { if (Set(ref _momentumFriction, value)) OnSettingsChanged(); } }
+
+    private bool _middleClickScroll = true;
+    public bool MiddleClickScroll { get => _middleClickScroll; set { if (Set(ref _middleClickScroll, value)) OnSettingsChanged(); } }
+
+    private int _middleClickDeadZone = 10;
+    public int MiddleClickDeadZone { get => _middleClickDeadZone; set { if (Set(ref _middleClickDeadZone, value)) OnSettingsChanged(); } }
 
     public ObservableCollection<string> ExcludedApps { get; }
 

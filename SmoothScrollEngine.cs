@@ -133,7 +133,7 @@ public sealed class SmoothScrollEngine : IDisposable
 
     public void Dispose() => Stop();
 
-    internal static double ComputeEasingFraction(double dtMs, double duration, EasingMode mode, double tailToHeadRatio, bool easingEnabled)
+    public static double ComputeEasingFraction(double dtMs, double duration, EasingMode mode, double tailToHeadRatio, bool easingEnabled)
     {
         if (!easingEnabled || mode == EasingMode.Linear)
         {
@@ -157,22 +157,82 @@ public sealed class SmoothScrollEngine : IDisposable
         public int AccelFactor;
         public double UnitAccum;
 
+        // Momentum fields
+        public double Velocity;       // px/ms
+        public bool InMomentum;
+        private double _momentumAccum;
+
         public void RegisterNotch(long nowMs, int delta, AppSettings s)
         {
+            // Cancel momentum on new user input
+            if (InMomentum)
+            {
+                InMomentum = false;
+                Velocity = 0;
+                _momentumAccum = 0;
+            }
+
             if (nowMs - LastNotchTime <= s.AccelerationDeltaMs)
                 AccelFactor = Math.Min(s.AccelerationMax, Math.Max(1, AccelFactor + 1));
             else
                 AccelFactor = 1;
 
+            var timeSinceLast = nowMs - LastNotchTime;
             LastNotchTime = nowMs;
 
             var notches = delta / (double)WHEEL_DELTA;
             var pixels = notches * s.StepSizePx * AccelFactor;
             RemainingPx += pixels;
+
+            // Track velocity for momentum
+            if (s.MomentumEnabled && timeSinceLast > 0 && timeSinceLast < 500)
+            {
+                Velocity = pixels / timeSinceLast;
+            }
         }
 
         public int Step(double dtMs, AppSettings s)
         {
+            // Momentum phase: if normal scroll finished and velocity is significant
+            if (s.MomentumEnabled && !InMomentum && Math.Abs(RemainingPx) < 0.1 && Math.Abs(Velocity) > 0.05)
+            {
+                var elapsed = Environment.TickCount64 - LastNotchTime;
+                if (elapsed > 80) // Wait a short moment after last notch
+                {
+                    InMomentum = true;
+                }
+            }
+
+            if (InMomentum)
+            {
+                // Friction: higher value = stops faster. Scale 0-100 to 0.001-0.02
+                var friction = 0.001 + (s.MomentumFriction / 100.0) * 0.019;
+                Velocity *= Math.Pow(1.0 - friction, dtMs);
+
+                if (Math.Abs(Velocity) < 0.02)
+                {
+                    InMomentum = false;
+                    Velocity = 0;
+                    _momentumAccum = 0;
+                    return 0;
+                }
+
+                var momentumPx = Velocity * dtMs;
+                var wheelUnits = (momentumPx / BASE_STEP_PX) * WHEEL_DELTA;
+                _momentumAccum += wheelUnits / EMIT_UNIT;
+
+                int mPulses = 0;
+                if (Math.Abs(_momentumAccum) >= 1.0)
+                {
+                    mPulses = (int)_momentumAccum;
+                    _momentumAccum -= mPulses;
+                }
+                if (mPulses == 0) return 0;
+                mPulses = Math.Clamp(mPulses, PULSE_CLAMP_MIN, PULSE_CLAMP_MAX);
+                return mPulses * EMIT_UNIT;
+            }
+
+            // Normal smooth scroll
             if (Math.Abs(RemainingPx) < 0.1)
             {
                 RemainingPx = 0;
@@ -186,9 +246,9 @@ public sealed class SmoothScrollEngine : IDisposable
             var emitPx = RemainingPx * frac;
             RemainingPx -= emitPx;
 
-            var wheelUnits = (emitPx / BASE_STEP_PX) * WHEEL_DELTA;
+            var wUnits = (emitPx / BASE_STEP_PX) * WHEEL_DELTA;
 
-            var units = wheelUnits / EMIT_UNIT;
+            var units = wUnits / EMIT_UNIT;
             UnitAccum += units;
 
             int pulses = 0;

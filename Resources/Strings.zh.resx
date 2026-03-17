@@ -57,6 +57,15 @@
   <data name="Direction" xml:space="preserve"><value>方向</value></data>
   <data name="ReverseWheel" xml:space="preserve"><value>反转滚轮方向</value></data>
 
+  <data name="AdvancedFeatures" xml:space="preserve"><value>高级功能</value></data>
+  <data name="ZoomSmoothing" xml:space="preserve"><value>平滑 Ctrl+缩放</value></data>
+  <data name="MiddleClickScroll" xml:space="preserve"><value>增强中键滚动</value></data>
+  <data name="MomentumScrolling" xml:space="preserve"><value>惯性滚动</value></data>
+  <data name="MomentumDesc" xml:space="preserve"><value>停止滚动后内容继续滑行。</value></data>
+  <data name="EnableMomentum" xml:space="preserve"><value>启用惯性滚动</value></data>
+  <data name="Friction" xml:space="preserve"><value>摩擦力</value></data>
+  <data name="CurvePreview" xml:space="preserve"><value>曲线预览</value></data>
+
   <data name="ExcludedAppsTitle" xml:space="preserve"><value>排除应用</value></data>
   <data name="ExcludedAppsDesc" xml:space="preserve"><value>平滑滚动将在这些应用程序中被禁用。在打开设置之前先聚焦一个应用，然后点击添加。</value></data>
   <data name="AddApp" xml:space="preserve"><value>添加应用…</value></data>

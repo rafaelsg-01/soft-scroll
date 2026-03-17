@@ -10,12 +10,14 @@ public partial class App : System.Windows.Application
     private GlobalMouseHook? _hook;
     private SettingsViewModel? _vm;
     private SmoothScrollEngine? _engine;
+    private ZoomSmoothEngine? _zoomEngine;
+    private MiddleClickScrollEngine? _middleClickEngine;
+    private MiddleClickOverlay? _middleClickOverlay;
     private SettingsWindow? _settingsWindow;
     private AppSettings _settings = null!;
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // Initialize logging first
         LoggingConfig.Configure();
         
         base.OnStartup(e);
@@ -28,6 +30,7 @@ public partial class App : System.Windows.Application
             var snapshot = _vm.Snapshot();
             _settings = snapshot;
             _engine?.ApplySettings(snapshot);
+            _middleClickEngine?.UpdateDeadZone(snapshot.MiddleClickDeadZone);
             if (_hook != null) _hook.ShiftKeyHorizontal = snapshot.ShiftKeyHorizontal;
         };
 
@@ -44,6 +47,25 @@ public partial class App : System.Windows.Application
         };
 
         _engine = new SmoothScrollEngine(_settings);
+        _zoomEngine = new ZoomSmoothEngine();
+        _middleClickEngine = new MiddleClickScrollEngine();
+
+        _middleClickEngine.Activated += (x, y) =>
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                _middleClickOverlay ??= new MiddleClickOverlay();
+                _middleClickOverlay.ShowAt(x, y);
+            });
+        };
+        _middleClickEngine.Deactivated += () =>
+        {
+            Dispatcher.InvokeAsync(() => _middleClickOverlay?.HideOverlay());
+        };
+        _middleClickEngine.DirectionChanged += (nx, ny) =>
+        {
+            _middleClickOverlay?.UpdateDirection(nx, ny);
+        };
 
         _hook = new GlobalMouseHook();
         _hook.ShiftKeyHorizontal = _settings.ShiftKeyHorizontal;
@@ -53,10 +75,7 @@ public partial class App : System.Windows.Application
             if (!_settings.Enabled) return;
 
             var foregroundProcess = ProcessHelper.GetProcessUnderCursor();
-            if (_settings.IsExcluded(foregroundProcess))
-            {
-                return;
-            }
+            if (_settings.IsExcluded(foregroundProcess)) return;
 
             args.Handled = true;
             _engine!.OnWheel(args.Delta);
@@ -71,10 +90,33 @@ public partial class App : System.Windows.Application
             args.Handled = true;
             _engine!.OnHWheel(args.Delta);
         };
+        _hook.MouseZoomWheel += (_, args) =>
+        {
+            if (!_settings.Enabled || !_settings.ZoomSmoothing) return;
+
+            var foregroundProcess = ProcessHelper.GetProcessUnderCursor();
+            if (_settings.IsExcluded(foregroundProcess)) return;
+
+            args.Handled = true;
+            _zoomEngine!.OnZoom(args.Delta);
+        };
+        _hook.MiddleButtonDown += (_, args) =>
+        {
+            if (!_settings.Enabled || !_settings.MiddleClickScroll) return;
+            _middleClickEngine!.OnMiddleDown(args.X, args.Y);
+        };
+        _hook.MiddleButtonUp += (_, _) =>
+        {
+            if (!_settings.MiddleClickScroll) return;
+            _middleClickEngine!.OnMiddleUp();
+        };
+        _hook.MouseMoved += (_, args) =>
+        {
+            _middleClickEngine?.OnMouseMove(args.X, args.Y);
+        };
 
         UpdateHookState();
 
-        // Check if should start minimized (started with Windows and StartMinimized is enabled)
         bool shouldStartMinimized = _settings.StartWithWindows && _settings.StartMinimized;
         
         if (!shouldStartMinimized)
@@ -84,7 +126,6 @@ public partial class App : System.Windows.Application
         else
         {
             Log.Information("Starting minimized to system tray");
-            // Tray icon is already created, app runs in background
         }
         
         Current.MainWindow = _settingsWindow;
@@ -99,12 +140,17 @@ public partial class App : System.Windows.Application
             _engine.ApplySettings(snapshot);
             _hook.ShiftKeyHorizontal = snapshot.ShiftKeyHorizontal;
             _engine.Start();
+            _zoomEngine?.Start();
+            _middleClickEngine?.Start();
             _hook.Install();
         }
         else
         {
             _hook.Uninstall();
             _engine.Stop();
+            _zoomEngine?.Stop();
+            _middleClickEngine?.Stop();
+            _middleClickEngine?.OnMiddleUp();
         }
     }
 
@@ -113,6 +159,8 @@ public partial class App : System.Windows.Application
         base.OnExit(e);
         _hook?.Dispose();
         _engine?.Dispose();
+        _zoomEngine?.Dispose();
+        _middleClickEngine?.Dispose();
         _tray?.Dispose();
         LoggingConfig.Shutdown();
     }
@@ -135,3 +183,4 @@ public partial class App : System.Windows.Application
         }
     }
 }
+

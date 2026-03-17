@@ -37,6 +37,12 @@ public sealed class AppSettings
 
     public string Language { get; set; } = "en";
 
+    public bool ZoomSmoothing { get; set; } = true;
+    public bool MomentumEnabled { get; set; } = false;
+    public int MomentumFriction { get; set; } = 50;
+    public bool MiddleClickScroll { get; set; } = true;
+    public int MiddleClickDeadZone { get; set; } = 10;
+
     public List<string> ExcludedApps { get; set; } = new();
 
     public static AppSettings CreateDefault() => new();

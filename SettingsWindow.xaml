@@ -243,16 +243,41 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <ControlTemplate x:Key="ComboBoxToggleButton" TargetType="ToggleButton">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="30" />
+                </Grid.ColumnDefinitions>
+                <Border x:Name="Border" 
+                        Grid.ColumnSpan="2"
+                        CornerRadius="8"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}" />
+                <Border Grid.Column="0" CornerRadius="8,0,0,8" Margin="1" Background="Transparent" />
+                <Path x:Name="Arrow"
+                      Grid.Column="1"     
+                      Fill="{TemplateBinding Foreground}"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Data="M 0 0 L 4 4 L 8 0 Z"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="true">
+                    <Setter TargetName="Border" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="true">
+                    <Setter TargetName="Border" Property="Background" Value="{DynamicResource SurfaceActiveBrush}" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
         <Style TargetType="ComboBox">
-            <Style.Resources>
-                <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#141416" />
-                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#3B82F6" />
-                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFFFFF" />
-                <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#141416" />
-            </Style.Resources>
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="Background" Value="{DynamicResource InputBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,9"/>
             <Setter Property="MinWidth" Value="160"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
@@ -267,7 +292,7 @@
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ComboBoxItem">
-                                    <Border x:Name="bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="4" Margin="2">
                                         <ContentPresenter/>
                                     </Border>
                                     <ControlTemplate.Triggers>
@@ -283,6 +308,48 @@
                             </Setter.Value>
                         </Setter>
                     </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid x:Name="MainGrid" SnapsToDevicePixels="true">
+                            <ToggleButton x:Name="ToggleButton" 
+                                          Template="{StaticResource ComboBoxToggleButton}"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          Focusable="false"
+                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                            <ContentPresenter x:Name="ContentSite"
+                                              IsHitTestVisible="False" 
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="{TemplateBinding Padding}"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left" />
+                            <Popup x:Name="Popup" 
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True" 
+                                   Focusable="False" 
+                                   PopupAnimation="Slide">
+                                <Border x:Name="DropDownBorder"
+                                        Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource SurfaceBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Margin="0,4,0,0"
+                                        MinWidth="{Binding ActualWidth, ElementName=MainGrid}">
+                                    <ScrollViewer Margin="4,4">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -486,6 +553,12 @@
                                     <TextBlock x:Name="TxtEasing" Grid.Row="6" Grid.Column="0" Text="Easing curve" Style="{StaticResource FormLabel}"/>
                                     <ComboBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource EasingModeValues}}" SelectedItem="{Binding EasingMode}" Margin="0"/>
                                 </Grid>
+
+                                <!-- Easing Curve Visualizer -->
+                                <TextBlock x:Name="TxtCurvePreview" Text="Curve Preview" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,16,0,4"/>
+                                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,0,0,0">
+                                    <local:EasingCurveCanvas />
+                                </Border>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -512,6 +585,24 @@
                             <StackPanel>
                                 <TextBlock x:Name="TxtDirection" Text="Direction" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
                                 <CheckBox x:Name="ChkReverse" Content="Reverse wheel direction" IsChecked="{Binding ReverseWheelDirection}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock x:Name="TxtAdvancedFeatures" Text="Advanced Features" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="ChkZoomSmoothing" Content="Smooth Ctrl+Zoom" IsChecked="{Binding ZoomSmoothing}"/>
+                                <CheckBox x:Name="ChkMiddleClickScroll" Content="Enhanced middle-click scroll" IsChecked="{Binding MiddleClickScroll}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock x:Name="TxtMomentum" Text="Momentum Scrolling" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TxtMomentumDesc" Text="Content continues drifting after you stop scrolling." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="ChkMomentum" Content="Enable momentum (inertia)" IsChecked="{Binding MomentumEnabled}"/>
+                                <StackPanel Margin="0,8,0,0">
+                                    <TextBlock x:Name="TxtFriction" Text="Friction" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <Slider Minimum="0" Maximum="100" Value="{Binding MomentumFriction}" Width="250" HorizontalAlignment="Left"  IsEnabled="{Binding MomentumEnabled}"/>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>

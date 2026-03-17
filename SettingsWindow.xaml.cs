@@ -3,7 +3,8 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 namespace SoftScroll;
 
 public partial class SettingsWindow : Window
@@ -69,6 +70,18 @@ public partial class SettingsWindow : Window
         TxtDirection.Text         = L("Direction");
         ChkReverse.Content        = L("ReverseWheel");
 
+        // Advanced features (Behavior tab)
+        TxtAdvancedFeatures.Text  = L("AdvancedFeatures");
+        ChkZoomSmoothing.Content  = L("ZoomSmoothing");
+        ChkMiddleClickScroll.Content = L("MiddleClickScroll");
+        TxtMomentum.Text          = L("MomentumScrolling");
+        TxtMomentumDesc.Text      = L("MomentumDesc");
+        ChkMomentum.Content       = L("EnableMomentum");
+        TxtFriction.Text          = L("Friction");
+
+        // Curve preview (Scrolling tab)
+        TxtCurvePreview.Text      = L("CurvePreview");
+
         // Excluded Apps tab
         TxtAppsTitle.Text = L("ExcludedAppsTitle");
         TxtAppsDesc.Text  = L("ExcludedAppsDesc");
@@ -125,6 +138,27 @@ public partial class SettingsWindow : Window
     private void OnNavApps(object sender, RoutedEventArgs e)      => SwitchTab(2);
     private void OnNavAbout(object sender, RoutedEventArgs e)     => SwitchTab(3);
 
+    [DllImport("DwmApi")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
+
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        UpdateTitleBarTheme();
+    }
+
+    private void UpdateTitleBarTheme()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd != IntPtr.Zero)
+        {
+            int[] darkAttr = new int[] { ThemeHelper.IsDarkMode() ? 1 : 0 };
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, darkAttr, 4);
+        }
+    }
+
     private void ApplyTheme()
     {
         bool isDark = ThemeHelper.IsDarkMode();
@@ -147,6 +181,8 @@ public partial class SettingsWindow : Window
         SetBrush("NavBackgroundBrush", GetColor(t, "NavBackground"));
         SetBrush("NavSelectedBrush",   GetColor(t, "NavSelected"));
         SetBrush("NavIndicatorBrush",  GetColor(t, "NavIndicator"));
+        
+        UpdateTitleBarTheme();
     }
 
     private static string GetColor(Type themeClass, string fieldName)
