@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -9,16 +9,21 @@ public sealed class SmoothScrollEngine : IDisposable
 {
     private readonly object _lock = new();
     private Thread? _thread;
-    private bool _running;
+    private volatile bool _running;
 
     private Axis _v = new();
     private Axis _h = new();
 
     private AppSettings _s = AppSettings.CreateDefault();
 
-    private const int WHEEL_DELTA = 120;
-    private const int EMIT_UNIT = 12; // 10 pulses per notch => smooth
-    private const double BASE_STEP_PX = 120.0; // baseline: 120 px -> 1 notch (120 units)
+    // Use constants from ScrollConstants
+    private static readonly int WHEEL_DELTA = ScrollConstants.WHEEL_DELTA;
+    private static readonly int EMIT_UNIT = ScrollConstants.EMIT_UNIT;
+    private static readonly double BASE_STEP_PX = ScrollConstants.BASE_STEP_PX;
+    private static readonly int PULSE_CLAMP_MIN = ScrollConstants.PULSE_CLAMP_MIN;
+    private static readonly int PULSE_CLAMP_MAX = ScrollConstants.PULSE_CLAMP_MAX;
+    private static readonly double FRAME_MS = ScrollConstants.FRAME_MS;
+    private static readonly int SPIN_WAIT_COUNT = ScrollConstants.SPIN_WAIT_COUNT;
 
     public SmoothScrollEngine(AppSettings settings) => ApplySettings(settings);
 
@@ -43,11 +48,14 @@ public sealed class SmoothScrollEngine : IDisposable
 
     public void Stop()
     {
-        lock (_lock) { _running = false; }
+        lock (_lock)
+        {
+            _running = false;
+            // Reset axis state inside lock to avoid race with worker thread
+            _v = new();
+            _h = new();
+        }
         _thread?.Join(1000);
-        _thread = null;
-        _v = new();
-        _h = new();
     }
 
     public void OnWheel(int delta)
@@ -73,34 +81,27 @@ public sealed class SmoothScrollEngine : IDisposable
     private void Worker()
     {
         var sw = Stopwatch.StartNew();
-        const double frameMs = 1000.0 / 120.0; // 120Hz
         double lastMs = sw.Elapsed.TotalMilliseconds;
 
-        while (true)
+        while (_running)
         {
-            bool running;
-            lock (_lock) running = _running;
-            if (!running) break;
-
             var nowMs = sw.Elapsed.TotalMilliseconds;
             var dt = Math.Max(1.0, nowMs - lastMs);
             lastMs = nowMs;
 
             int outV = 0, outH = 0;
-            AppSettings s;
             lock (_lock)
             {
-                s = _s;
-                outV = _v.Step(dt, s);
-                if (s.HorizontalSmoothness) outH = _h.Step(dt, s); else outH = 0;
+                outV = _v.Step(dt, _s);
+                if (_s.HorizontalSmoothness) outH = _h.Step(dt, _s); else outH = 0;
             }
 
             if (outV != 0) SendWheel(outV);
             if (outH != 0) SendHWheel(outH);
 
-            var sleep = frameMs - (sw.Elapsed.TotalMilliseconds - nowMs);
+            var sleep = FRAME_MS - (sw.Elapsed.TotalMilliseconds - nowMs);
             if (sleep > 0) Thread.Sleep((int)Math.Round(sleep));
-            else Thread.Sleep(1);
+            else Thread.SpinWait(SPIN_WAIT_COUNT);  // More efficient than Sleep(1)
         }
     }
 
@@ -114,7 +115,7 @@ public sealed class SmoothScrollEngine : IDisposable
                 mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_WHEEL, mouseData = mouseData }
             }
         };
-        SendInput(1, new[] { inp }, Marshal.SizeOf<INPUT>());
+        SendInput(1, [inp], Marshal.SizeOf<INPUT>());
     }
 
     private static void SendHWheel(int mouseData)
@@ -127,17 +128,34 @@ public sealed class SmoothScrollEngine : IDisposable
                 mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_HWHEEL, mouseData = mouseData }
             }
         };
-        SendInput(1, new[] { inp }, Marshal.SizeOf<INPUT>());
+        SendInput(1, [inp], Marshal.SizeOf<INPUT>());
     }
 
     public void Dispose() => Stop();
 
+    internal static double ComputeEasingFraction(double dtMs, double duration, EasingMode mode, double tailToHeadRatio, bool easingEnabled)
+    {
+        if (!easingEnabled || mode == EasingMode.Linear)
+        {
+            return Math.Min(1.0, dtMs / duration);
+        }
+
+        var t = dtMs / duration;
+
+        return mode switch
+        {
+            EasingMode.CubicOut => 1.0 - Math.Pow(1.0 - Math.Min(t, 1.0), 3),
+            EasingMode.QuinticOut => 1.0 - Math.Pow(1.0 - Math.Min(t, 1.0), 5),
+            _ => 1.0 - Math.Exp(-(2.0 + tailToHeadRatio) * t) // ExponentialOut (default)
+        };
+    }
+
     private struct Axis
     {
-        public double RemainingPx;   // remaining pixels to emit
-        public long LastNotchTime;   // ms
-        public int AccelFactor;      // 1..AccelerationMax
-        public double UnitAccum;     // accumulated EMIT_UNIT pulses (fractional)
+        public double RemainingPx;
+        public long LastNotchTime;
+        public int AccelFactor;
+        public double UnitAccum;
 
         public void RegisterNotch(long nowMs, int delta, AppSettings s)
         {
@@ -148,7 +166,7 @@ public sealed class SmoothScrollEngine : IDisposable
 
             LastNotchTime = nowMs;
 
-            var notches = delta / (double)WHEEL_DELTA; // typically +/-1
+            var notches = delta / (double)WHEEL_DELTA;
             var pixels = notches * s.StepSizePx * AccelFactor;
             RemainingPx += pixels;
         }
@@ -163,29 +181,25 @@ public sealed class SmoothScrollEngine : IDisposable
             }
 
             var duration = Math.Max(1.0, s.AnimationTimeMs);
-            // Exponential ease-out: monotonic decay, less bounce
-            var k = s.AnimationEasing ? (2.0 + s.TailToHeadRatio) : 1.0;
-            var frac = 1.0 - Math.Exp(-k * (dtMs / duration)); // 0..1 portion to emit this frame
+            var frac = ComputeEasingFraction(dtMs, duration, s.EasingMode, s.TailToHeadRatio, s.AnimationEasing);
 
             var emitPx = RemainingPx * frac;
             RemainingPx -= emitPx;
 
-            // Convert emitted pixels to wheel units using a fixed baseline mapping
-            var wheelUnits = (emitPx / BASE_STEP_PX) * WHEEL_DELTA; // fractional 120-based units
+            var wheelUnits = (emitPx / BASE_STEP_PX) * WHEEL_DELTA;
 
-            // Convert to EMIT_UNIT pulses and accumulate fractional remainder
             var units = wheelUnits / EMIT_UNIT;
             UnitAccum += units;
 
             int pulses = 0;
             if (Math.Abs(UnitAccum) >= 1.0)
             {
-                pulses = (int)UnitAccum; // trunc toward zero
+                pulses = (int)UnitAccum;
                 UnitAccum -= pulses;
             }
 
             if (pulses == 0) return 0;
-            pulses = Math.Clamp(pulses, -20, 20); // limit per frame
+            pulses = Math.Clamp(pulses, PULSE_CLAMP_MIN, PULSE_CLAMP_MAX);
             return pulses * EMIT_UNIT;
         }
     }

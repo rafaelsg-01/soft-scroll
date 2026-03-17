@@ -1,18 +1,11 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
 namespace SoftScroll;
 
-/// <summary>
-/// Helper class to detect Windows dark/light mode and provide theme colors.
-/// </summary>
 public static class ThemeHelper
 {
-    /// <summary>
-    /// Returns true if Windows is in dark mode, false if light mode.
-    /// </summary>
     public static bool IsDarkMode()
     {
         try
@@ -23,43 +16,55 @@ public static class ThemeHelper
             {
                 var value = key.GetValue("AppsUseLightTheme");
                 if (value is int intValue)
-                {
-                    return intValue == 0; // 0 = dark mode, 1 = light mode
-                }
+                    return intValue == 0;
             }
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[ThemeHelper] Error detecting theme: {ex.Message}");
         }
-        return true; // Default to dark mode
+        return true;
     }
 
-    // Dark mode colors (black/white/gray palette)
     public static class Dark
     {
-        public const string Background = "#1A1A1A";
-        public const string Surface = "#252525";
-        public const string SurfaceBorder = "#3A3A3A";
-        public const string Text = "#FFFFFF";
-        public const string TextSecondary = "#B0B0B0";
-        public const string Accent = "#FFFFFF";
-        public const string AccentHover = "#E0E0E0";
-        public const string Input = "#1E1E1E";
-        public const string InputBorder = "#404040";
+        public const string Background = "#0A0A0B";
+        public const string Surface = "#141416";
+        public const string SurfaceHover = "#1C1C1F";
+        public const string SurfaceActive = "#252529";
+        public const string SurfaceBorder = "#2A2A2E";
+        public const string Text = "#F4F4F5";
+        public const string TextSecondary = "#8B8B94";
+        public const string TextTertiary = "#5A5A63";
+        public const string Accent = "#3B82F6";
+        public const string AccentHover = "#2563EB";
+        public const string AccentText = "#FFFFFF";
+        public const string Input = "#1C1C1F";
+        public const string InputBorder = "#2A2A2E";
+        public const string InputFocus = "#3B82F6";
+        public const string NavBackground = "#0F0F11";
+        public const string NavSelected = "#1C1C1F";
+        public const string NavIndicator = "#3B82F6";
     }
 
-    // Light mode colors (black/white/gray palette)
     public static class Light
     {
-        public const string Background = "#F5F5F5";
+        public const string Background = "#F8F8FA";
         public const string Surface = "#FFFFFF";
-        public const string SurfaceBorder = "#D0D0D0";
-        public const string Text = "#1A1A1A";
-        public const string TextSecondary = "#606060";
-        public const string Accent = "#1A1A1A";
-        public const string AccentHover = "#404040";
+        public const string SurfaceHover = "#F4F4F5";
+        public const string SurfaceActive = "#ECECEE";
+        public const string SurfaceBorder = "#E4E4E7";
+        public const string Text = "#18181B";
+        public const string TextSecondary = "#71717A";
+        public const string TextTertiary = "#A1A1AA";
+        public const string Accent = "#3B82F6";
+        public const string AccentHover = "#2563EB";
+        public const string AccentText = "#FFFFFF";
         public const string Input = "#FFFFFF";
-        public const string InputBorder = "#C0C0C0";
+        public const string InputBorder = "#D4D4D8";
+        public const string InputFocus = "#3B82F6";
+        public const string NavBackground = "#F0F0F2";
+        public const string NavSelected = "#FFFFFF";
+        public const string NavIndicator = "#3B82F6";
     }
 }

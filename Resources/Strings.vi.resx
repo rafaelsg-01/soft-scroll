@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="WindowTitle" xml:space="preserve"><value>Soft Scroll - Cài đặt</value></data>
+  <data name="WindowTitleSaved" xml:space="preserve"><value>Soft Scroll - Cài đặt (đã lưu)</value></data>
+  <data name="AppTagline" xml:space="preserve"><value>Cuộn mượt mà cho Windows</value></data>
+
+  <data name="NavScrolling" xml:space="preserve"><value>  🖱  Cuộn</value></data>
+  <data name="NavBehavior" xml:space="preserve"><value>  ⚙  Hành vi</value></data>
+  <data name="NavExcludedApps" xml:space="preserve"><value>  🚫  Ứng dụng loại trừ</value></data>
+  <data name="NavAbout" xml:space="preserve"><value>  ℹ  Giới thiệu</value></data>
+
+  <data name="ScrollingTitle" xml:space="preserve"><value>Cuộn</value></data>
+  <data name="ScrollingDesc" xml:space="preserve"><value>Cấu hình cách cuộn mượt hoạt động trên hệ thống của bạn.</value></data>
+  <data name="QuickPresets" xml:space="preserve"><value>Cài đặt nhanh</value></data>
+  <data name="QuickPresetsDesc" xml:space="preserve"><value>Áp dụng cài đặt có sẵn để cấu hình nhanh tất cả thông số cuộn.</value></data>
+  <data name="PresetDefault" xml:space="preserve"><value>Mặc định</value></data>
+  <data name="PresetReading" xml:space="preserve"><value>Đọc sách</value></data>
+  <data name="PresetProductivity" xml:space="preserve"><value>Làm việc</value></data>
+  <data name="PresetGaming" xml:space="preserve"><value>Chơi game</value></data>
+  <data name="Parameters" xml:space="preserve"><value>Thông số</value></data>
+  <data name="StepSize" xml:space="preserve"><value>Kích thước bước</value></data>
+  <data name="AnimationTime" xml:space="preserve"><value>Thời gian hiệu ứng</value></data>
+  <data name="AccelerationDelta" xml:space="preserve"><value>Delta tăng tốc</value></data>
+  <data name="AccelerationMax" xml:space="preserve"><value>Tăng tốc tối đa</value></data>
+  <data name="TailToHeadRatio" xml:space="preserve"><value>Tỷ lệ đuôi/đầu</value></data>
+  <data name="EasingCurve" xml:space="preserve"><value>Đường cong easing</value></data>
+
+  <data name="BehaviorTitle" xml:space="preserve"><value>Hành vi</value></data>
+  <data name="BehaviorDesc" xml:space="preserve"><value>Kiểm soát cách các tính năng cuộn được áp dụng trên hệ thống.</value></data>
+  <data name="ScrollFeatures" xml:space="preserve"><value>Tính năng cuộn</value></data>
+  <data name="EnableSmoothScrolling" xml:space="preserve"><value>Bật cuộn mượt</value></data>
+  <data name="AnimationEasing" xml:space="preserve"><value>Hiệu ứng easing</value></data>
+  <data name="HorizontalScrolling" xml:space="preserve"><value>Cuộn ngang</value></data>
+  <data name="ShiftKeyHorizontal" xml:space="preserve"><value>Dùng phím Shift để cuộn ngang</value></data>
+  <data name="SmoothHorizontal" xml:space="preserve"><value>Áp dụng cuộn mượt cho cuộn ngang</value></data>
+  <data name="Direction" xml:space="preserve"><value>Hướng</value></data>
+  <data name="ReverseWheel" xml:space="preserve"><value>Đảo ngược hướng cuộn</value></data>
+
+  <data name="ExcludedAppsTitle" xml:space="preserve"><value>Ứng dụng loại trừ</value></data>
+  <data name="ExcludedAppsDesc" xml:space="preserve"><value>Cuộn mượt sẽ bị tắt cho các ứng dụng này. Hãy focus vào ứng dụng trước khi mở Cài đặt, rồi nhấn Thêm.</value></data>
+  <data name="AddApp" xml:space="preserve"><value>Thêm ứng dụng…</value></data>
+  <data name="RemoveSelected" xml:space="preserve"><value>Xóa đã chọn</value></data>
+  <data name="NoSelectionTitle" xml:space="preserve"><value>Chưa chọn</value></data>
+  <data name="NoSelectionMsg" xml:space="preserve"><value>Vui lòng chọn một ứng dụng từ danh sách để xóa.</value></data>
+
+  <data name="AboutTitle" xml:space="preserve"><value>Giới thiệu</value></data>
+  <data name="AboutDesc" xml:space="preserve"><value>Thông tin ứng dụng và cài đặt hệ thống.</value></data>
+  <data name="MadeWith" xml:space="preserve"><value>Được tạo với ❤ cho trải nghiệm cuộn tốt hơn.</value></data>
+  <data name="System" xml:space="preserve"><value>Hệ thống</value></data>
+  <data name="StartWithWindows" xml:space="preserve"><value>Khởi động cùng Windows</value></data>
+  <data name="StartMinimized" xml:space="preserve"><value>Khởi động ẩn (thu nhỏ cửa sổ)</value></data>
+  <data name="ResetTitle" xml:space="preserve"><value>Đặt lại</value></data>
+  <data name="ResetDesc" xml:space="preserve"><value>Khôi phục tất cả cài đặt về mặc định ban đầu.</value></data>
+  <data name="ResetToDefaults" xml:space="preserve"><value>Đặt lại mặc định</value></data>
+  <data name="Language" xml:space="preserve"><value>Ngôn ngữ</value></data>
+
+  <data name="FooterHint" xml:space="preserve"><value>Thay đổi được áp dụng khi bạn nhấn Lưu.</value></data>
+  <data name="Close" xml:space="preserve"><value>Đóng</value></data>
+  <data name="Save" xml:space="preserve"><value>Lưu</value></data>
+</root>

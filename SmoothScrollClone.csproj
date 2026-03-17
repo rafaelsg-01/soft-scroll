@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -14,16 +14,31 @@
     <Product>Soft Scroll</Product>
     <Company>Soft Scroll</Company>
     <Description>Soft Scroll brings smooth, configurable scrolling to Windows.</Description>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
 
     <!-- App executable icon -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Logging -->
+    <PackageReference Include="Serilog" Version="4.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Embed as Resource for pack URI -->
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\logo.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Strings.vi.resx" />
+    <EmbeddedResource Update="Resources\Strings.zh.resx" />
   </ItemGroup>
 
   <ItemGroup>

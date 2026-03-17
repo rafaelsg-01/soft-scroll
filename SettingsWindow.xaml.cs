@@ -10,53 +10,149 @@ public partial class SettingsWindow : Window
 {
     private readonly SettingsViewModel _vm;
     private static readonly Regex _numRegex = new("^[0-9]+$");
-    private string? _lastFocusedApp;
+    private int _activeTab;
 
     public SettingsWindow(SettingsViewModel vm)
     {
         InitializeComponent();
         _vm = vm;
         DataContext = _vm;
-        this.Title = "Soft Scroll - Settings";
 
-        // Capture the last focused app before this window was opened
-        _lastFocusedApp = ProcessHelper.GetForegroundProcessName();
-        if (string.Equals(_lastFocusedApp, "SoftScroll", StringComparison.OrdinalIgnoreCase))
-        {
-            _lastFocusedApp = null;
-        }
+        LocalizationManager.SetLanguage(_vm.Language);
 
-        // Apply theme based on Windows settings
+        LanguageCombo.ItemsSource = LocalizationManager.LanguageDisplayNames;
+        LanguageCombo.SelectedIndex = LocalizationManager.GetLanguageIndex();
+
         ApplyTheme();
+        ApplyLocalization();
+        SwitchTab(0);
     }
+
+    private void ApplyLocalization()
+    {
+        var L = new Func<string, string>(LocalizationManager.Get);
+
+        this.Title = L("WindowTitle");
+
+        // Nav
+        NavScrolling.Content = L("NavScrolling");
+        NavBehavior.Content  = L("NavBehavior");
+        NavApps.Content      = L("NavExcludedApps");
+        NavAbout.Content     = L("NavAbout");
+
+        // Scrolling tab
+        TxtScrollingTitle.Text = L("ScrollingTitle");
+        TxtScrollingDesc.Text  = L("ScrollingDesc");
+        TxtQuickPresets.Text   = L("QuickPresets");
+        TxtQuickPresetsDesc.Text = L("QuickPresetsDesc");
+        BtnPresetDefault.Content      = L("PresetDefault");
+        BtnPresetReading.Content      = L("PresetReading");
+        BtnPresetProductivity.Content = L("PresetProductivity");
+        BtnPresetGaming.Content       = L("PresetGaming");
+        TxtParameters.Text    = L("Parameters");
+        TxtStepSize.Text      = L("StepSize");
+        TxtAnimTime.Text      = L("AnimationTime");
+        TxtAccelDelta.Text    = L("AccelerationDelta");
+        TxtAccelMax.Text      = L("AccelerationMax");
+        TxtTailHead.Text      = L("TailToHeadRatio");
+        TxtEasing.Text        = L("EasingCurve");
+
+        // Behavior tab
+        TxtBehaviorTitle.Text = L("BehaviorTitle");
+        TxtBehaviorDesc.Text  = L("BehaviorDesc");
+        TxtScrollFeatures.Text = L("ScrollFeatures");
+        ChkEnableSmooth.Content   = L("EnableSmoothScrolling");
+        ChkAnimEasing.Content     = L("AnimationEasing");
+        TxtHorizontal.Text        = L("HorizontalScrolling");
+        ChkShiftHoriz.Content     = L("ShiftKeyHorizontal");
+        ChkSmoothHoriz.Content    = L("SmoothHorizontal");
+        TxtDirection.Text         = L("Direction");
+        ChkReverse.Content        = L("ReverseWheel");
+
+        // Excluded Apps tab
+        TxtAppsTitle.Text = L("ExcludedAppsTitle");
+        TxtAppsDesc.Text  = L("ExcludedAppsDesc");
+        BtnAddApp.Content    = L("AddApp");
+        BtnRemoveApp.Content = L("RemoveSelected");
+
+        // About tab
+        TxtAboutTitle.Text  = L("AboutTitle");
+        TxtAboutDesc.Text   = L("AboutDesc");
+        TxtMadeWith.Text    = L("MadeWith");
+        TxtSystem.Text      = L("System");
+        ChkStartWin.Content       = L("StartWithWindows");
+        ChkStartMin.Content       = L("StartMinimized");
+        TxtResetTitle.Text        = L("ResetTitle");
+        TxtResetDesc.Text         = L("ResetDesc");
+        BtnResetDefaults.Content  = L("ResetToDefaults");
+        TxtLanguage.Text          = L("Language");
+
+        // Footer
+        TxtFooterHint.Text  = L("FooterHint");
+        BtnClose.Content    = L("Close");
+        BtnSave.Content     = L("Save");
+    }
+
+    private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LanguageCombo.SelectedIndex < 0) return;
+        var langCode = LocalizationManager.SupportedLanguages[LanguageCombo.SelectedIndex];
+        _vm.Language = langCode;
+        LocalizationManager.SetLanguage(langCode);
+        ApplyLocalization();
+
+        // Re-apply active tab style
+        SwitchTab(_activeTab);
+    }
+
+    private void SwitchTab(int index)
+    {
+        _activeTab = index;
+
+        TabScrolling.Visibility = index == 0 ? Visibility.Visible : Visibility.Collapsed;
+        TabBehavior.Visibility  = index == 1 ? Visibility.Visible : Visibility.Collapsed;
+        TabApps.Visibility      = index == 2 ? Visibility.Visible : Visibility.Collapsed;
+        TabAbout.Visibility     = index == 3 ? Visibility.Visible : Visibility.Collapsed;
+
+        NavScrolling.Style = index == 0 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavBehavior.Style  = index == 1 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavApps.Style      = index == 2 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavAbout.Style     = index == 3 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+    }
+
+    private void OnNavScrolling(object sender, RoutedEventArgs e) => SwitchTab(0);
+    private void OnNavBehavior(object sender, RoutedEventArgs e)  => SwitchTab(1);
+    private void OnNavApps(object sender, RoutedEventArgs e)      => SwitchTab(2);
+    private void OnNavAbout(object sender, RoutedEventArgs e)     => SwitchTab(3);
 
     private void ApplyTheme()
     {
         bool isDark = ThemeHelper.IsDarkMode();
+        var t = isDark ? typeof(ThemeHelper.Dark) : typeof(ThemeHelper.Light);
 
-        // Update resource dictionary colors
-        if (isDark)
-        {
-            SetBrush("BackgroundBrush", ThemeHelper.Dark.Background);
-            SetBrush("SurfaceBrush", ThemeHelper.Dark.Surface);
-            SetBrush("SurfaceBorderBrush", ThemeHelper.Dark.SurfaceBorder);
-            SetBrush("TextBrush", ThemeHelper.Dark.Text);
-            SetBrush("TextSecondaryBrush", ThemeHelper.Dark.TextSecondary);
-            SetBrush("AccentBrush", ThemeHelper.Dark.Accent);
-            SetBrush("InputBrush", ThemeHelper.Dark.Input);
-            SetBrush("InputBorderBrush", ThemeHelper.Dark.InputBorder);
-        }
-        else
-        {
-            SetBrush("BackgroundBrush", ThemeHelper.Light.Background);
-            SetBrush("SurfaceBrush", ThemeHelper.Light.Surface);
-            SetBrush("SurfaceBorderBrush", ThemeHelper.Light.SurfaceBorder);
-            SetBrush("TextBrush", ThemeHelper.Light.Text);
-            SetBrush("TextSecondaryBrush", ThemeHelper.Light.TextSecondary);
-            SetBrush("AccentBrush", ThemeHelper.Light.Accent);
-            SetBrush("InputBrush", ThemeHelper.Light.Input);
-            SetBrush("InputBorderBrush", ThemeHelper.Light.InputBorder);
-        }
+        SetBrush("BackgroundBrush",    GetColor(t, "Background"));
+        SetBrush("SurfaceBrush",       GetColor(t, "Surface"));
+        SetBrush("SurfaceHoverBrush",  GetColor(t, "SurfaceHover"));
+        SetBrush("SurfaceActiveBrush", GetColor(t, "SurfaceActive"));
+        SetBrush("SurfaceBorderBrush", GetColor(t, "SurfaceBorder"));
+        SetBrush("TextBrush",          GetColor(t, "Text"));
+        SetBrush("TextSecondaryBrush", GetColor(t, "TextSecondary"));
+        SetBrush("TextTertiaryBrush",  GetColor(t, "TextTertiary"));
+        SetBrush("AccentBrush",        GetColor(t, "Accent"));
+        SetBrush("AccentHoverBrush",   GetColor(t, "AccentHover"));
+        SetBrush("AccentTextBrush",    GetColor(t, "AccentText"));
+        SetBrush("InputBrush",         GetColor(t, "Input"));
+        SetBrush("InputBorderBrush",   GetColor(t, "InputBorder"));
+        SetBrush("InputFocusBrush",    GetColor(t, "InputFocus"));
+        SetBrush("NavBackgroundBrush", GetColor(t, "NavBackground"));
+        SetBrush("NavSelectedBrush",   GetColor(t, "NavSelected"));
+        SetBrush("NavIndicatorBrush",  GetColor(t, "NavIndicator"));
+    }
+
+    private static string GetColor(Type themeClass, string fieldName)
+    {
+        var field = themeClass.GetField(fieldName);
+        return (string)(field?.GetValue(null) ?? "#FF00FF");
     }
 
     private void SetBrush(string resourceKey, string colorHex)
@@ -69,11 +165,8 @@ public partial class SettingsWindow : Window
     {
         var snapshot = _vm.Snapshot();
         snapshot.Save();
-
-        // Update Windows startup registry based on setting
         StartupManager.SetStartup(snapshot.StartWithWindows);
-
-        this.Title = "Soft Scroll - Settings (saved)";
+        this.Title = LocalizationManager.Get("WindowTitleSaved");
     }
 
     private void OnResetDefaults(object sender, RoutedEventArgs e)
@@ -81,13 +174,13 @@ public partial class SettingsWindow : Window
         _vm.Apply(AppSettings.CreateDefault());
     }
 
-    // Close button -> behaves like normal window close (app stays in tray)
-    private void OnCloseClicked(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
+    private void OnCloseClicked(object sender, RoutedEventArgs e) => Close();
 
-    // Add app to exclusion list - opens dialog to select from running apps
+    private void OnPresetDefault(object sender, RoutedEventArgs e)      => _vm.ApplyPreset("Default");
+    private void OnPresetReading(object sender, RoutedEventArgs e)      => _vm.ApplyPreset("Reading");
+    private void OnPresetProductivity(object sender, RoutedEventArgs e) => _vm.ApplyPreset("Productivity");
+    private void OnPresetGaming(object sender, RoutedEventArgs e)       => _vm.ApplyPreset("Gaming");
+
     private void OnAddApp(object sender, RoutedEventArgs e)
     {
         var dialog = new AddApplicationDialog();
@@ -98,7 +191,6 @@ public partial class SettingsWindow : Window
         }
     }
 
-    // Remove selected app from exclusion list
     private void OnRemoveApp(object sender, RoutedEventArgs e)
     {
         if (ExcludedAppsList.SelectedItem is string selected)
@@ -107,12 +199,14 @@ public partial class SettingsWindow : Window
         }
         else
         {
-            System.Windows.MessageBox.Show("Please select an application from the list to remove.", 
-                "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(
+                LocalizationManager.Get("NoSelectionMsg"),
+                LocalizationManager.Get("NoSelectionTitle"),
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
         }
     }
 
-    // Numeric input filters
     private void NumericOnly(object sender, TextCompositionEventArgs e)
     {
         e.Handled = !_numRegex.IsMatch(e.Text);

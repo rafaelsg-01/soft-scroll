@@ -23,10 +23,13 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         AccelerationMax = s.AccelerationMax;
         TailToHeadRatio = s.TailToHeadRatio;
         AnimationEasing = s.AnimationEasing;
+        EasingMode = s.EasingMode;
         ShiftKeyHorizontal = s.ShiftKeyHorizontal;
         HorizontalSmoothness = s.HorizontalSmoothness;
         ReverseWheelDirection = s.ReverseWheelDirection;
         StartWithWindows = s.StartWithWindows;
+        StartMinimized = s.StartMinimized;
+        Language = s.Language;
 
         ExcludedApps.Clear();
         foreach (var app in s.ExcludedApps)
@@ -42,12 +45,27 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         AccelerationMax = AccelerationMax,
         TailToHeadRatio = TailToHeadRatio,
         AnimationEasing = AnimationEasing,
+        EasingMode = EasingMode,
         ShiftKeyHorizontal = ShiftKeyHorizontal,
         HorizontalSmoothness = HorizontalSmoothness,
         ReverseWheelDirection = ReverseWheelDirection,
         StartWithWindows = StartWithWindows,
+        StartMinimized = StartMinimized,
+        Language = Language,
         ExcludedApps = new List<string>(ExcludedApps)
     };
+
+    public void ApplyPreset(string presetName)
+    {
+        var preset = AppSettings.CreatePreset(presetName);
+        StepSizePx = preset.StepSizePx;
+        AnimationTimeMs = preset.AnimationTimeMs;
+        AccelerationDeltaMs = preset.AccelerationDeltaMs;
+        AccelerationMax = preset.AccelerationMax;
+        TailToHeadRatio = preset.TailToHeadRatio;
+        AnimationEasing = preset.AnimationEasing;
+        EasingMode = preset.EasingMode;
+    }
 
     private bool _enabled;
     public bool Enabled { get => _enabled; set { if (Set(ref _enabled, value)) OnSettingsChanged(); } }
@@ -70,6 +88,9 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _easing;
     public bool AnimationEasing { get => _easing; set { if (Set(ref _easing, value)) OnSettingsChanged(); } }
 
+    private EasingMode _easingMode;
+    public EasingMode EasingMode { get => _easingMode; set { if (Set(ref _easingMode, value)) OnSettingsChanged(); } }
+
     private bool _shiftHorizontal;
     public bool ShiftKeyHorizontal { get => _shiftHorizontal; set { if (Set(ref _shiftHorizontal, value)) OnSettingsChanged(); } }
 
@@ -82,7 +103,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _startWithWindows;
     public bool StartWithWindows { get => _startWithWindows; set { if (Set(ref _startWithWindows, value)) OnSettingsChanged(); } }
 
-    // Per-app exclusion list
+    private bool _startMinimized;
+    public bool StartMinimized { get => _startMinimized; set { if (Set(ref _startMinimized, value)) OnSettingsChanged(); } }
+
+    private string _language = "en";
+    public string Language { get => _language; set { if (Set(ref _language, value)) OnSettingsChanged(); } }
+
     public ObservableCollection<string> ExcludedApps { get; }
 
     public void AddExcludedApp(string appName)

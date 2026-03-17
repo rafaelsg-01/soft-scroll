@@ -3,32 +3,78 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SoftScroll;
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum EasingMode
+{
+    ExponentialOut,
+    CubicOut,
+    QuinticOut,
+    Linear
+}
+
 public sealed class AppSettings
 {
-    // Master enable
     public bool Enabled { get; set; } = true;
 
-    // SmoothScroll-compatible defaults
-    public int StepSizePx { get; set; } = 120;            // Step size [px]
-    public int AnimationTimeMs { get; set; } = 360;       // Animation time [ms]
-    public int AccelerationDeltaMs { get; set; } = 70;    // Accel window [ms]
-    public int AccelerationMax { get; set; } = 7;         // Accel max [x]
-    public int TailToHeadRatio { get; set; } = 3;         // Easing power
+    public int StepSizePx { get; set; } = 120;
+    public int AnimationTimeMs { get; set; } = 360;
+    public int AccelerationDeltaMs { get; set; } = 70;
+    public int AccelerationMax { get; set; } = 7;
+    public int TailToHeadRatio { get; set; } = 3;
 
-    public bool AnimationEasing { get; set; } = true;               // Easing on/off
-    public bool ShiftKeyHorizontal { get; set; } = true;            // Shift = horizontal
-    public bool HorizontalSmoothness { get; set; } = true;          // Smooth horizontal
-    public bool ReverseWheelDirection { get; set; } = false;        // Reverse scroll
+    public bool AnimationEasing { get; set; } = true;
+    public EasingMode EasingMode { get; set; } = EasingMode.ExponentialOut;
+    public bool ShiftKeyHorizontal { get; set; } = true;
+    public bool HorizontalSmoothness { get; set; } = true;
+    public bool ReverseWheelDirection { get; set; } = false;
 
     public bool StartWithWindows { get; set; } = false;
+    public bool StartMinimized { get; set; } = true;
 
-    // Per-app exclusion list
+    public string Language { get; set; } = "en";
+
     public List<string> ExcludedApps { get; set; } = new();
 
     public static AppSettings CreateDefault() => new();
+
+    public static AppSettings CreatePreset(string presetName) => presetName switch
+    {
+        "Reading" => new()
+        {
+            StepSizePx = 80,
+            AnimationTimeMs = 500,
+            AccelerationDeltaMs = 100,
+            AccelerationMax = 3,
+            TailToHeadRatio = 5,
+            AnimationEasing = true,
+            EasingMode = EasingMode.CubicOut
+        },
+        "Productivity" => new()
+        {
+            StepSizePx = 160,
+            AnimationTimeMs = 250,
+            AccelerationDeltaMs = 60,
+            AccelerationMax = 10,
+            TailToHeadRatio = 2,
+            AnimationEasing = true,
+            EasingMode = EasingMode.ExponentialOut
+        },
+        "Gaming" => new()
+        {
+            StepSizePx = 120,
+            AnimationTimeMs = 100,
+            AccelerationDeltaMs = 40,
+            AccelerationMax = 5,
+            TailToHeadRatio = 1,
+            AnimationEasing = false,
+            EasingMode = EasingMode.Linear
+        },
+        _ => CreateDefault()
+    };
 
     public static string GetConfigPath()
     {
@@ -70,9 +116,6 @@ public sealed class AppSettings
         }
     }
 
-    /// <summary>
-    /// Checks if the given process name is in the exclusion list (case-insensitive).
-    /// </summary>
     public bool IsExcluded(string? processName)
     {
         if (string.IsNullOrEmpty(processName)) return false;
