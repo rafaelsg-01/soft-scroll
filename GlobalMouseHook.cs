@@ -1,6 +1,4 @@
 using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace SoftScroll;
 
@@ -22,7 +20,7 @@ public sealed class MousePositionEventArgs : EventArgs
 public sealed class GlobalMouseHook : IDisposable
 {
     private IntPtr _hook = IntPtr.Zero;
-    private HookProc? _proc;
+    private NativeMethods.HookProc? _proc;
 
     public bool IsInstalled => _hook != IntPtr.Zero;
 
@@ -42,15 +40,15 @@ public sealed class GlobalMouseHook : IDisposable
     {
         if (IsInstalled) return;
         _proc = HookCallback;
-        using var curProcess = Process.GetCurrentProcess();
+        using var curProcess = System.Diagnostics.Process.GetCurrentProcess();
         using var curModule = curProcess.MainModule!;
-        _hook = SetWindowsHookEx(WH_MOUSE_LL, _proc, GetModuleHandle(curModule.ModuleName), 0);
+        _hook = NativeMethods.SetWindowsHookEx(NativeMethods.WH_MOUSE_LL, _proc, NativeMethods.GetModuleHandle(curModule.ModuleName), 0);
     }
 
     public void Uninstall()
     {
         if (!IsInstalled) return;
-        UnhookWindowsHookEx(_hook);
+        NativeMethods.UnhookWindowsHookEx(_hook);
         _hook = IntPtr.Zero;
     }
 
@@ -59,15 +57,12 @@ public sealed class GlobalMouseHook : IDisposable
         if (nCode >= 0)
         {
             var msg = wParam.ToInt32();
-            var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+            var data = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
 
-            // Ignore injected events to avoid feedback loops
-            const int LLMHF_INJECTED = 0x00000001;
-            const int LLMHF_LOWER_IL_INJECTED = 0x00000002;
-            if ((data.flags & (LLMHF_INJECTED | LLMHF_LOWER_IL_INJECTED)) != 0)
-                return CallNextHookEx(_hook, nCode, wParam, lParam);
+            if ((data.flags & (NativeMethods.LLMHF_INJECTED | NativeMethods.LLMHF_LOWER_IL_INJECTED)) != 0)
+                return NativeMethods.CallNextHookEx(_hook, nCode, wParam, lParam);
 
-            if (msg == WM_MOUSEWHEEL)
+            if (msg == NativeMethods.WM_MOUSEWHEEL)
             {
                 int delta = (short)((data.mouseData >> 16) & 0xffff);
                 var args = new MouseWheelEventArgs(delta);
@@ -88,7 +83,7 @@ public sealed class GlobalMouseHook : IDisposable
                 if (args.Handled)
                     return (IntPtr)1;
             }
-            else if (msg == WM_MOUSEHWHEEL)
+            else if (msg == NativeMethods.WM_MOUSEHWHEEL)
             {
                 int delta = (short)((data.mouseData >> 16) & 0xffff);
                 var args = new MouseWheelEventArgs(delta);
@@ -96,70 +91,31 @@ public sealed class GlobalMouseHook : IDisposable
                 if (args.Handled)
                     return (IntPtr)1;
             }
-            else if (msg == WM_MBUTTONDOWN)
+            else if (msg == NativeMethods.WM_MBUTTONDOWN)
             {
                 MiddleButtonDown?.Invoke(this, new MousePositionEventArgs(data.pt.x, data.pt.y));
             }
-            else if (msg == WM_MBUTTONUP)
+            else if (msg == NativeMethods.WM_MBUTTONUP)
             {
                 MiddleButtonUp?.Invoke(this, EventArgs.Empty);
             }
-            else if (msg == WM_MOUSEMOVE)
+            else if (msg == NativeMethods.WM_MOUSEMOVE)
             {
                 MouseMoved?.Invoke(this, new MousePositionEventArgs(data.pt.x, data.pt.y));
             }
         }
-        return CallNextHookEx(_hook, nCode, wParam, lParam);
+        return NativeMethods.CallNextHookEx(_hook, nCode, wParam, lParam);
     }
 
     public void Dispose() => Uninstall();
 
     private static bool IsShiftPressed()
     {
-        const int VK_SHIFT = 0x10;
-        return (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+        return (NativeMethods.GetAsyncKeyState(NativeMethods.VK_SHIFT) & 0x8000) != 0;
     }
 
     private static bool IsCtrlPressed()
     {
-        const int VK_CONTROL = 0x11;
-        return (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+        return (NativeMethods.GetAsyncKeyState(NativeMethods.VK_CONTROL) & 0x8000) != 0;
     }
-
-    private delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
-
-    private const int WH_MOUSE_LL = 14;
-    private const int WM_MOUSEWHEEL = 0x020A;
-    private const int WM_MOUSEHWHEEL = 0x020E;
-    private const int WM_MBUTTONDOWN = 0x0207;
-    private const int WM_MBUTTONUP = 0x0208;
-    private const int WM_MOUSEMOVE = 0x0200;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct POINT { public int x; public int y; }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MSLLHOOKSTRUCT
-    {
-        public POINT pt;
-        public int mouseData;
-        public int flags;
-        public int time;
-        public nint dwExtraInfo;
-    }
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr GetModuleHandle(string lpModuleName);
-
-    [DllImport("user32.dll")]
-    private static extern short GetAsyncKeyState(int vKey);
 }

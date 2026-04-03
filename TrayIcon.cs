@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Forms;
 
@@ -59,16 +58,16 @@ public sealed class TrayIcon : IDisposable
             if (sri != null)
                 return new System.Drawing.Icon(sri.Stream);
         }
-        catch (Exception ex) { Debug.WriteLine($"[TrayIcon] Failed to load embedded icon: {ex.Message}"); }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "[TrayIcon] Failed to load embedded icon"); }
 
         // 2) Fallback to EXE associated icon (uses ApplicationIcon)
         try
         {
-            var exePath = Process.GetCurrentProcess().MainModule!.FileName!;
+            var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule!.FileName!;
             var ico = System.Drawing.Icon.ExtractAssociatedIcon(exePath);
             if (ico != null) return ico;
         }
-        catch (Exception ex) { Debug.WriteLine($"[TrayIcon] Failed to extract EXE icon: {ex.Message}"); }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "[TrayIcon] Failed to extract EXE icon"); }
 
         // 3) Last resort: default app icon
         return System.Drawing.SystemIcons.Application;

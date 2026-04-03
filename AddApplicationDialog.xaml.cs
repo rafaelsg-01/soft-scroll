@@ -106,7 +106,7 @@ public partial class AddApplicationDialog : Window
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[AddApplicationDialog] Error loading processes: {ex.Message}");
+            Serilog.Log.Warning(ex, "[AddApplicationDialog] Error loading processes");
         }
 
         ProcessList.ItemsSource = processes.OrderBy(p => p.Name).ToList();

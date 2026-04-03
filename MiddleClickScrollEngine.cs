@@ -10,6 +10,7 @@ public sealed class MiddleClickScrollEngine : IDisposable
     private readonly object _lock = new();
     private Thread? _thread;
     private volatile bool _running;
+    private readonly ManualResetEventSlim _signal = new(false);
     private volatile bool _active;
 
     private int _originX, _originY;
@@ -39,6 +40,7 @@ public sealed class MiddleClickScrollEngine : IDisposable
     public void Stop()
     {
         lock (_lock) { _running = false; _active = false; }
+        _signal.Set();
         _thread?.Join(1000);
     }
 
@@ -53,12 +55,14 @@ public sealed class MiddleClickScrollEngine : IDisposable
             _active = true;
         }
         Activated?.Invoke(x, y);
+        _signal.Set();
     }
 
     public void OnMiddleUp()
     {
         lock (_lock) { _active = false; }
         Deactivated?.Invoke();
+        _signal.Set();
     }
 
     public void OnMouseMove(int x, int y)
@@ -79,64 +83,64 @@ public sealed class MiddleClickScrollEngine : IDisposable
 
         while (_running)
         {
+            if (!_active)
+            {
+                _signal.Wait(TimeSpan.FromMilliseconds(100));
+                _signal.Reset();
+                accumV = 0;
+                accumH = 0;
+                continue;
+            }
+
             var nowMs = sw.Elapsed.TotalMilliseconds;
             var dt = Math.Max(1.0, nowMs - lastMs);
             lastMs = nowMs;
 
-            if (_active)
+            int dx, dy, dz;
+            lock (_lock)
             {
-                int dx, dy, dz;
-                lock (_lock)
-                {
-                    dx = _currentX - _originX;
-                    dy = _currentY - _originY;
-                    dz = _deadZone;
-                }
-
-                // Compute scroll speed from distance (with dead zone)
-                double speedV = 0, speedH = 0;
-                if (Math.Abs(dy) > dz)
-                {
-                    var effective = Math.Abs(dy) - dz;
-                    speedV = Math.Sign(dy) * SpeedCurve(effective) * dt * 0.01;
-                }
-                if (Math.Abs(dx) > dz)
-                {
-                    var effective = Math.Abs(dx) - dz;
-                    speedH = Math.Sign(dx) * SpeedCurve(effective) * dt * 0.01;
-                }
-
-                // Notify overlay of direction
-                var maxDist = 200.0;
-                DirectionChanged?.Invoke(
-                    Math.Clamp(dx / maxDist, -1.0, 1.0),
-                    Math.Clamp(dy / maxDist, -1.0, 1.0)
-                );
-
-                accumV += speedV;
-                accumH += speedH;
-
-                // Emit vertical scroll
-                if (Math.Abs(accumV) >= 1.0)
-                {
-                    int pulses = (int)accumV;
-                    accumV -= pulses;
-                    // Positive dy = mouse moved down = scroll down (negative wheel delta)
-                    SendWheel(-pulses * WHEEL_DELTA);
-                }
-
-                // Emit horizontal scroll
-                if (Math.Abs(accumH) >= 1.0)
-                {
-                    int pulses = (int)accumH;
-                    accumH -= pulses;
-                    SendHWheel(pulses * WHEEL_DELTA);
-                }
+                dx = _currentX - _originX;
+                dy = _currentY - _originY;
+                dz = _deadZone;
             }
-            else
+
+            // Compute scroll speed from distance (with dead zone)
+            double speedV = 0, speedH = 0;
+            if (Math.Abs(dy) > dz)
             {
-                accumV = 0;
-                accumH = 0;
+                var effective = Math.Abs(dy) - dz;
+                speedV = Math.Sign(dy) * SpeedCurve(effective) * dt * 0.01;
+            }
+            if (Math.Abs(dx) > dz)
+            {
+                var effective = Math.Abs(dx) - dz;
+                speedH = Math.Sign(dx) * SpeedCurve(effective) * dt * 0.01;
+            }
+
+            // Notify overlay of direction
+            var maxDist = 200.0;
+            DirectionChanged?.Invoke(
+                Math.Clamp(dx / maxDist, -1.0, 1.0),
+                Math.Clamp(dy / maxDist, -1.0, 1.0)
+            );
+
+            accumV += speedV;
+            accumH += speedH;
+
+            // Emit vertical scroll
+            if (Math.Abs(accumV) >= 1.0)
+            {
+                int pulses = (int)accumV;
+                accumV -= pulses;
+                SendWheel(-pulses * WHEEL_DELTA);
+            }
+
+            // Emit horizontal scroll
+            if (Math.Abs(accumH) >= 1.0)
+            {
+                int pulses = (int)accumH;
+                accumH -= pulses;
+                SendHWheel(pulses * WHEEL_DELTA);
             }
 
             var sleep = FRAME_MS - (sw.Elapsed.TotalMilliseconds - nowMs);
@@ -153,36 +157,23 @@ public sealed class MiddleClickScrollEngine : IDisposable
 
     private static void SendWheel(int mouseData)
     {
-        var inp = new INPUT
+        var inp = new NativeMethods.INPUT
         {
             type = 0,
-            U = new InputUnion { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_WHEEL, mouseData = mouseData } }
+            U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData } }
         };
-        SendInput(1, [inp], Marshal.SizeOf<INPUT>());
+        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
     }
 
     private static void SendHWheel(int mouseData)
     {
-        var inp = new INPUT
+        var inp = new NativeMethods.INPUT
         {
             type = 0,
-            U = new InputUnion { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_HWHEEL, mouseData = mouseData } }
+            U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_HWHEEL, mouseData = mouseData } }
         };
-        SendInput(1, [inp], Marshal.SizeOf<INPUT>());
+        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
     }
 
     public void Dispose() => Stop();
-
-    private const int MOUSEEVENTF_WHEEL = 0x0800;
-    private const int MOUSEEVENTF_HWHEEL = 0x01000;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct INPUT { public int type; public InputUnion U; }
-    [StructLayout(LayoutKind.Explicit)]
-    private struct InputUnion { [FieldOffset(0)] public MOUSEINPUT mi; }
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MOUSEINPUT { public int dx; public int dy; public int mouseData; public int dwFlags; public int time; public nint dwExtraInfo; }
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 }

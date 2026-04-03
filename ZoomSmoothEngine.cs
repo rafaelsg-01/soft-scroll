@@ -10,6 +10,7 @@ public sealed class ZoomSmoothEngine : IDisposable
     private readonly object _lock = new();
     private Thread? _thread;
     private volatile bool _running;
+    private readonly ManualResetEventSlim _signal = new(false);
     private double _remainingDelta;
     private double _unitAccum;
 
@@ -45,6 +46,7 @@ public sealed class ZoomSmoothEngine : IDisposable
         {
             _remainingDelta += delta;
         }
+        _signal.Set();
     }
 
     private void Worker()
@@ -54,6 +56,19 @@ public sealed class ZoomSmoothEngine : IDisposable
 
         while (_running)
         {
+            bool workAvailable;
+            lock (_lock)
+            {
+                workAvailable = Math.Abs(_remainingDelta) >= 0.1;
+            }
+
+            if (!workAvailable)
+            {
+                _signal.Wait(TimeSpan.FromMilliseconds(100));
+                _signal.Reset();
+                continue;
+            }
+
             var nowMs = sw.Elapsed.TotalMilliseconds;
             var dt = Math.Max(1.0, nowMs - lastMs);
             lastMs = nowMs;
@@ -102,36 +117,14 @@ public sealed class ZoomSmoothEngine : IDisposable
 
     private static void SendCtrlWheel(int mouseData)
     {
-        var inputs = new INPUT[]
+        var inputs = new NativeMethods.INPUT[]
         {
-            new() { type = INPUT_KEYBOARD, U = new InputUnion { ki = new KEYBDINPUT { wVk = VK_CONTROL } } },
-            new() { type = INPUT_MOUSE, U = new InputUnion { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_WHEEL, mouseData = mouseData } } },
-            new() { type = INPUT_KEYBOARD, U = new InputUnion { ki = new KEYBDINPUT { wVk = VK_CONTROL, dwFlags = KEYEVENTF_KEYUP } } },
+            new() { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.InputUnion { ki = new NativeMethods.KEYBDINPUT { wVk = NativeMethods.VK_CONTROL } } },
+            new() { type = NativeMethods.INPUT_MOUSE, U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData } } },
+            new() { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.InputUnion { ki = new NativeMethods.KEYBDINPUT { wVk = NativeMethods.VK_CONTROL, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } },
         };
-        SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+        NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<NativeMethods.INPUT>());
     }
 
     public void Dispose() => Stop();
-
-    private const int INPUT_MOUSE = 0;
-    private const int INPUT_KEYBOARD = 1;
-    private const int MOUSEEVENTF_WHEEL = 0x0800;
-    private const int KEYEVENTF_KEYUP = 0x0002;
-    private const ushort VK_CONTROL = 0x11;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct INPUT { public int type; public InputUnion U; }
-    [StructLayout(LayoutKind.Explicit)]
-    private struct InputUnion
-    {
-        [FieldOffset(0)] public MOUSEINPUT mi;
-        [FieldOffset(0)] public KEYBDINPUT ki;
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MOUSEINPUT { public int dx; public int dy; public int mouseData; public int dwFlags; public int time; public nint dwExtraInfo; }
-    [StructLayout(LayoutKind.Sequential)]
-    private struct KEYBDINPUT { public ushort wVk; public ushort wScan; public int dwFlags; public int time; public nint dwExtraInfo; }
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 }

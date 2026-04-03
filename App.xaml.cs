@@ -74,8 +74,8 @@ public partial class App : System.Windows.Application
         {
             if (!_settings.Enabled) return;
 
-            var foregroundProcess = ProcessHelper.GetProcessUnderCursor();
-            if (_settings.IsExcluded(foregroundProcess)) return;
+            var processName = CachedProcessHelper.GetProcessUnderCursor();
+            if (_settings.IsExcluded(processName)) return;
 
             args.Handled = true;
             _engine!.OnWheel(args.Delta);
@@ -84,8 +84,8 @@ public partial class App : System.Windows.Application
         {
             if (!_settings.Enabled) return;
 
-            var foregroundProcess = ProcessHelper.GetProcessUnderCursor();
-            if (_settings.IsExcluded(foregroundProcess)) return;
+            var processName = CachedProcessHelper.GetProcessUnderCursor();
+            if (_settings.IsExcluded(processName)) return;
 
             args.Handled = true;
             _engine!.OnHWheel(args.Delta);
@@ -94,8 +94,8 @@ public partial class App : System.Windows.Application
         {
             if (!_settings.Enabled || !_settings.ZoomSmoothing) return;
 
-            var foregroundProcess = ProcessHelper.GetProcessUnderCursor();
-            if (_settings.IsExcluded(foregroundProcess)) return;
+            var processName = CachedProcessHelper.GetProcessUnderCursor();
+            if (_settings.IsExcluded(processName)) return;
 
             args.Handled = true;
             _zoomEngine!.OnZoom(args.Delta);

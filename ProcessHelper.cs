@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace SoftScroll;
 
@@ -17,18 +16,15 @@ public static class ProcessHelper
     {
         try
         {
-            // Get cursor position
-            if (!GetCursorPos(out POINT pt)) return null;
-            
-            // Get window under cursor
-            var hwnd = WindowFromPoint(pt);
-            if (hwnd == IntPtr.Zero) return null;
-            
-            // Get the root owner window (for child windows)
-            hwnd = GetAncestor(hwnd, GA_ROOT);
+            if (!NativeMethods.GetCursorPos(out var pt)) return null;
+
+            var hwnd = NativeMethods.WindowFromPoint(pt);
             if (hwnd == IntPtr.Zero) return null;
 
-            GetWindowThreadProcessId(hwnd, out uint processId);
+            hwnd = NativeMethods.GetAncestor(hwnd, NativeMethods.GA_ROOT);
+            if (hwnd == IntPtr.Zero) return null;
+
+            NativeMethods.GetWindowThreadProcessId(hwnd, out uint processId);
             if (processId == 0) return null;
 
             using var process = Process.GetProcessById((int)processId);
@@ -36,7 +32,7 @@ public static class ProcessHelper
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ProcessHelper] Error getting process under cursor: {ex.Message}");
+            Serilog.Log.Warning(ex, "[ProcessHelper] Error getting process under cursor");
             return null;
         }
     }
@@ -49,10 +45,10 @@ public static class ProcessHelper
     {
         try
         {
-            var hwnd = GetForegroundWindow();
+            var hwnd = NativeMethods.GetForegroundWindow();
             if (hwnd == IntPtr.Zero) return null;
 
-            GetWindowThreadProcessId(hwnd, out uint processId);
+            NativeMethods.GetWindowThreadProcessId(hwnd, out uint processId);
             if (processId == 0) return null;
 
             using var process = Process.GetProcessById((int)processId);
@@ -60,7 +56,7 @@ public static class ProcessHelper
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ProcessHelper] Error getting foreground process: {ex.Message}");
+            Serilog.Log.Warning(ex, "[ProcessHelper] Error getting foreground process");
             return null;
         }
     }
@@ -73,10 +69,10 @@ public static class ProcessHelper
     {
         try
         {
-            var hwnd = GetForegroundWindow();
+            var hwnd = NativeMethods.GetForegroundWindow();
             if (hwnd == IntPtr.Zero) return null;
 
-            GetWindowThreadProcessId(hwnd, out uint processId);
+            NativeMethods.GetWindowThreadProcessId(hwnd, out uint processId);
             if (processId == 0) return null;
 
             using var process = Process.GetProcessById((int)processId);
@@ -84,33 +80,8 @@ public static class ProcessHelper
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ProcessHelper] Error getting foreground process path: {ex.Message}");
+            Serilog.Log.Warning(ex, "[ProcessHelper] Error getting foreground process path");
             return null;
         }
     }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct POINT
-    {
-        public int X;
-        public int Y;
-    }
-
-    private const uint GA_ROOT = 2;
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetCursorPos(out POINT lpPoint);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr WindowFromPoint(POINT Point);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetAncestor(IntPtr hwnd, uint gaFlags);
 }

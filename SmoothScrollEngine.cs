@@ -10,6 +10,7 @@ public sealed class SmoothScrollEngine : IDisposable
     private readonly object _lock = new();
     private Thread? _thread;
     private volatile bool _running;
+    private readonly ManualResetEventSlim _signal = new(false);
 
     private Axis _v = new();
     private Axis _h = new();
@@ -55,6 +56,7 @@ public sealed class SmoothScrollEngine : IDisposable
             _v = new();
             _h = new();
         }
+        _signal.Set();
         _thread?.Join(1000);
     }
 
@@ -66,6 +68,7 @@ public sealed class SmoothScrollEngine : IDisposable
             var now = Environment.TickCount64;
             _v.RegisterNotch(now, delta * dir, _s);
         }
+        _signal.Set();
     }
 
     public void OnHWheel(int delta)
@@ -76,6 +79,7 @@ public sealed class SmoothScrollEngine : IDisposable
             var now = Environment.TickCount64;
             _h.RegisterNotch(now, delta * dir, _s);
         }
+        _signal.Set();
     }
 
     private void Worker()
@@ -85,6 +89,23 @@ public sealed class SmoothScrollEngine : IDisposable
 
         while (_running)
         {
+            // Check if there's anything to emit
+            bool workAvailable;
+            lock (_lock)
+            {
+                workAvailable = Math.Abs(_v.RemainingPx) >= 0.1
+                    || Math.Abs(_h.RemainingPx) >= 0.1;
+            }
+
+            if (!workAvailable)
+            {
+                // Block until a wheel event signals us or timeout elapses.
+                // Timeout guarantees eventual shutdown even if no signal arrives.
+                _signal.Wait(TimeSpan.FromMilliseconds(100));
+                _signal.Reset();
+                continue;
+            }
+
             var nowMs = sw.Elapsed.TotalMilliseconds;
             var dt = Math.Max(1.0, nowMs - lastMs);
             lastMs = nowMs;
@@ -101,34 +122,34 @@ public sealed class SmoothScrollEngine : IDisposable
 
             var sleep = FRAME_MS - (sw.Elapsed.TotalMilliseconds - nowMs);
             if (sleep > 0) Thread.Sleep((int)Math.Round(sleep));
-            else Thread.SpinWait(SPIN_WAIT_COUNT);  // More efficient than Sleep(1)
+            else Thread.SpinWait(SPIN_WAIT_COUNT);
         }
     }
 
     private static void SendWheel(int mouseData)
     {
-        var inp = new INPUT
+        var inp = new NativeMethods.INPUT
         {
             type = 0,
-            U = new InputUnion
+            U = new NativeMethods.InputUnion
             {
-                mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_WHEEL, mouseData = mouseData }
+                mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData }
             }
         };
-        SendInput(1, [inp], Marshal.SizeOf<INPUT>());
+        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
     }
 
     private static void SendHWheel(int mouseData)
     {
-        var inp = new INPUT
+        var inp = new NativeMethods.INPUT
         {
             type = 0,
-            U = new InputUnion
+            U = new NativeMethods.InputUnion
             {
-                mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_HWHEEL, mouseData = mouseData }
+                mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_HWHEEL, mouseData = mouseData }
             }
         };
-        SendInput(1, [inp], Marshal.SizeOf<INPUT>());
+        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
     }
 
     public void Dispose() => Stop();
@@ -263,17 +284,4 @@ public sealed class SmoothScrollEngine : IDisposable
             return pulses * EMIT_UNIT;
         }
     }
-
-    private const int MOUSEEVENTF_WHEEL = 0x0800;
-    private const int MOUSEEVENTF_HWHEEL = 0x01000;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct INPUT { public int type; public InputUnion U; }
-    [StructLayout(LayoutKind.Explicit)]
-    private struct InputUnion { [FieldOffset(0)] public MOUSEINPUT mi; }
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MOUSEINPUT { public int dx; public int dy; public int mouseData; public int dwFlags; public int time; public nint dwExtraInfo; }
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 }

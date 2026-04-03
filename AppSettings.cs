@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -98,14 +97,38 @@ public sealed class AppSettings
             {
                 var json = File.ReadAllText(path);
                 var s = JsonSerializer.Deserialize<AppSettings>(json);
-                if (s != null) return s;
+                if (s != null)
+                {
+                    s.Clamp();
+                    return s;
+                }
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[AppSettings] Failed to load settings: {ex.Message}");
+            Serilog.Log.Warning(ex, "[AppSettings] Failed to load settings");
         }
         return CreateDefault();
+    }
+
+    /// <summary>
+    /// Clamps all numeric properties to valid ranges. Call after deserialization
+    /// to protect against corrupted or hand-edited settings files.
+    /// </summary>
+    internal void Clamp()
+    {
+        StepSizePx = Math.Clamp(StepSizePx, 10, 500);
+        AnimationTimeMs = Math.Clamp(AnimationTimeMs, 10, 2000);
+        AccelerationDeltaMs = Math.Clamp(AccelerationDeltaMs, 0, 500);
+        AccelerationMax = Math.Clamp(AccelerationMax, 1, 20);
+        TailToHeadRatio = Math.Clamp(TailToHeadRatio, 1, 20);
+        MomentumFriction = Math.Clamp(MomentumFriction, 0, 100);
+        MiddleClickDeadZone = Math.Clamp(MiddleClickDeadZone, 0, 100);
+
+        if (!LocalizationManager.SupportedLanguages.Contains(Language))
+            Language = "en";
+
+        ExcludedApps ??= new List<string>();
     }
 
     public void Save()
@@ -118,7 +141,7 @@ public sealed class AppSettings
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[AppSettings] Failed to save settings: {ex.Message}");
+            Serilog.Log.Warning(ex, "[AppSettings] Failed to save settings");
         }
     }
 

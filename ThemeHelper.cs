@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using Microsoft.Win32;
 
 namespace SoftScroll;
@@ -21,7 +20,7 @@ public static class ThemeHelper
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ThemeHelper] Error detecting theme: {ex.Message}");
+            Serilog.Log.Warning(ex, "[ThemeHelper] Error detecting theme");
         }
         return true;
     }
