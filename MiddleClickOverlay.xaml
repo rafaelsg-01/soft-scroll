@@ -14,7 +14,7 @@
     -->
     <Grid>
         <!-- Background Glow -->
-        <Ellipse Width="70" Height="70" Fill="#20000000" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Ellipse x:Name="BackgroundGlow" Width="70" Height="70" Fill="#20000000" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Ellipse.Effect>
                 <BlurEffect Radius="20"/>
             </Ellipse.Effect>
@@ -55,14 +55,30 @@
             </Path>
         </Grid>
 
-        <!-- Center Point -->
-        <Grid Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Ellipse Width="8" Height="8" Fill="#80FFFFFF">
+        <!-- Center Point with Speed Indicator -->
+        <Grid x:Name="SpeedIndicator" Width="36" Height="36" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- Outer ring that pulses with scroll activity -->
+            <Ellipse x:Name="SpeedRing" Width="36" Height="36" Stroke="#4064C4F5" StrokeThickness="2" Opacity="0.5"/>
+            
+            <!-- Inner glow -->
+            <Ellipse Width="28" Height="28" Fill="#20064C4F5">
                 <Ellipse.Effect>
-                    <BlurEffect Radius="4"/>
+                    <BlurEffect Radius="8"/>
                 </Ellipse.Effect>
             </Ellipse>
-            <Ellipse Width="3" Height="3" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            
+            <!-- Speed text -->
+            <TextBlock x:Name="SpeedText"
+                       Text="0"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       Foreground="#80FFFFFF"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       TextAlignment="Center"/>
+            
+            <!-- Center dot -->
+            <Ellipse Width="4" Height="4" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
     </Grid>
 </Window>

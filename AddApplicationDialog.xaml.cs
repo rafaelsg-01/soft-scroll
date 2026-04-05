@@ -15,6 +15,7 @@ namespace SoftScroll;
 public partial class AddApplicationDialog : Window
 {
     public string? SelectedProcessName { get; private set; }
+    public string? SelectedAppName { get; private set; }
 
     public AddApplicationDialog()
     {
@@ -95,6 +96,7 @@ public partial class AddApplicationDialog : Window
                     processes.Add(new ProcessInfo
                     {
                         Name = proc.ProcessName,
+                        Title = proc.MainWindowTitle,
                         Icon = icon
                     });
                 }
@@ -153,6 +155,7 @@ public partial class AddApplicationDialog : Window
         if (ProcessList.SelectedItem is ProcessInfo selected)
         {
             SelectedProcessName = selected.Name;
+            SelectedAppName = selected.Title ?? selected.Name;
             DialogResult = true;
             Close();
         }
@@ -175,6 +178,7 @@ public partial class AddApplicationDialog : Window
         if (dialog.ShowDialog() == true)
         {
             SelectedProcessName = Path.GetFileNameWithoutExtension(dialog.FileName);
+            SelectedAppName = Path.GetFileNameWithoutExtension(dialog.FileName);
             DialogResult = true;
             Close();
         }
@@ -189,6 +193,7 @@ public partial class AddApplicationDialog : Window
     private class ProcessInfo
     {
         public string Name { get; set; } = "";
+        public string? Title { get; set; }
         public ImageSource? Icon { get; set; }
     }
 }

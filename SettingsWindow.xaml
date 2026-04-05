@@ -10,6 +10,8 @@
         FontFamily="Segoe UI Variable Display, Segoe UI, Arial"
         FontSize="13">
     <Window.Resources>
+        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <local:VolumeConverter x:Key="VolumeConverter"/>
         <SolidColorBrush x:Key="BackgroundBrush" Color="#0A0A0B"/>
         <SolidColorBrush x:Key="SurfaceBrush" Color="#141416"/>
         <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#1C1C1F"/>
@@ -490,7 +492,11 @@
                     </StackPanel>
                     <StackPanel DockPanel.Dock="Top" Margin="4,0,4,0">
                         <Button x:Name="NavScrolling" Content="  🖱  Scrolling" Click="OnNavScrolling"/>
-                        <Button x:Name="NavBehavior"  Content="  ⚙  Behavior"  Click="OnNavBehavior"  Style="{StaticResource NavButton}"/>
+                        <Button x:Name="NavBehavior"  Content="  ⚙  Behavior"  Click="OnNavBehavior" Style="{StaticResource NavButton}"/>
+                        <Button x:Name="NavAppProfiles" Content="  📱  App Profiles" Click="OnNavAppProfiles" Style="{StaticResource NavButton}"/>
+                        <Button x:Name="NavVisual" Content="  ✨  Visual Feedback" Click="OnNavVisual" Style="{StaticResource NavButton}"/>
+                        <Button x:Name="NavAccessibility" Content="  ♿  Accessibility" Click="OnNavAccessibility" Style="{StaticResource NavButton}"/>
+                        <Button x:Name="NavStats" Content="  📊  Statistics" Click="OnNavStats" Style="{StaticResource NavButton}"/>
                         <Button x:Name="NavApps"      Content="  🚫  Excluded Apps" Click="OnNavApps" Style="{StaticResource NavButton}"/>
                         <Button x:Name="NavAbout"     Content="  ℹ  About"     Click="OnNavAbout"     Style="{StaticResource NavButton}"/>
                     </StackPanel>
@@ -626,7 +632,214 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- Tab 3: About -->
+                    <!-- Tab 3: App Profiles -->
+                    <StackPanel x:Name="TabAppProfiles" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtAppProfilesTitle" Text="App Profiles" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock x:Name="TxtAppProfilesDesc" Text="Configure custom scroll settings for specific applications. These will be automatically applied when you switch to that app." Style="{StaticResource SectionDesc}"/>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkUseAppProfiles" Content="Enable app-specific profiles" IsChecked="{Binding UseAppProfiles}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}" Padding="24">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Application Profiles" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                <ListBox x:Name="AppProfilesList" Grid.Row="1" Height="220" ItemsSource="{Binding AppProfiles}" Margin="0,0,0,12">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding AppName}" FontWeight="SemiBold" Width="140"/>
+                                                <TextBlock Text="Step:" Foreground="{DynamicResource TextSecondaryBrush}" Margin="16,0,4,0"/>
+                                                <TextBlock Text="{Binding StepSizePx}" Width="40"/>
+                                                <TextBlock Text="ms |" Foreground="{DynamicResource TextTertiaryBrush}" Margin="4,0"/>
+                                                <TextBlock Text="{Binding EasingMode}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                    <Button x:Name="BtnAddProfile" Content="Add Profile…" Click="OnAddAppProfile" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
+                                    <Button x:Name="BtnRemoveProfile" Content="Remove Selected" Click="OnRemoveAppProfile" Style="{StaticResource SecondaryButton}" Margin="0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Tab 4: Visual Feedback -->
+                    <StackPanel x:Name="TabVisual" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtVisualTitle" Text="Visual Feedback" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock x:Name="TxtVisualDesc" Text="Customize the visual indicators and feedback during scrolling." Style="{StaticResource SectionDesc}"/>
+                        
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Scroll Indicator" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="ChkShowScrollIndicator" Content="Show scroll speed indicator" IsChecked="{Binding ShowScrollIndicator}"/>
+                                <StackPanel Margin="0,12,0,0">
+                                    <TextBlock Text="Indicator Position" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <ComboBox x:Name="IndicatorPositionCombo" MinWidth="180" SelectedItem="{Binding IndicatorPosition}">
+                                        <ComboBoxItem Content="Top Right" Tag="TopRight"/>
+                                        <ComboBoxItem Content="Top Left" Tag="TopLeft"/>
+                                        <ComboBoxItem Content="Bottom Right" Tag="BottomRight"/>
+                                        <ComboBoxItem Content="Bottom Left" Tag="BottomLeft"/>
+                                        <ComboBoxItem Content="Center" Tag="Center"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Margin="0,12,0,0">
+                                    <TextBlock Text="Indicator Duration" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Slider Minimum="200" Maximum="2000" Value="{Binding ScrollIndicatorDurationMs}" Width="200" HorizontalAlignment="Left"/>
+                                        <TextBlock Text="{Binding ScrollIndicatorDurationMs}" Margin="12,0,0,0" VerticalAlignment="Center" Width="50"/>
+                                        <TextBlock Text="ms" Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Middle-Click Overlay" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBlock Text="Customize the visual indicator shown during middle-click scrolling." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                                
+                                <StackPanel Margin="0,0,0,12">
+                                    <TextBlock Text="Cursor Size" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Slider Minimum="16" Maximum="64" Value="{Binding MiddleClickCursorSize}" Width="200" HorizontalAlignment="Left"/>
+                                        <TextBlock Text="{Binding MiddleClickCursorSize}" Margin="12,0,0,0" VerticalAlignment="Center" Width="30"/>
+                                        <TextBlock Text="px" Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <StackPanel>
+                                    <TextBlock Text="Edge Bounce" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <CheckBox x:Name="ChkEdgeBounce" Content="Enable edge bounce effect" IsChecked="{Binding MiddleClickEnableEdgeBounce}"/>
+                                    <StackPanel Margin="0,8,0,0" IsEnabled="{Binding MiddleClickEnableEdgeBounce}">
+                                        <TextBlock Text="Bounce Strength" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,0,0,4"/>
+                                        <Slider Minimum="0" Maximum="100" Value="{Binding MiddleClickBounceStrength}" Width="200" HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Tab 5: Accessibility -->
+                    <StackPanel x:Name="TabAccessibility" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtAccessibilityTitle" Text="Accessibility" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock x:Name="TxtAccessibilityDesc" Text="Accessibility features to assist users with different needs." Style="{StaticResource SectionDesc}"/>
+                        
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Screen Reader Announcements" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="ChkScreenReader" Content="Enable screen reader announcements" IsChecked="{Binding EnableScreenReaderAnnouncements}"/>
+                                <StackPanel Margin="0,12,0,0" IsEnabled="{Binding EnableScreenReaderAnnouncements}">
+                                    <CheckBox x:Name="ChkAnnounceSpeed" Content="Announce scroll speed changes" IsChecked="{Binding AnnounceScrollSpeed}"/>
+                                    <CheckBox x:Name="ChkAnnouncePosition" Content="Announce scroll position" IsChecked="{Binding AnnounceScrollPosition}" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="High Contrast Mode" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="ChkHighContrast" Content="Enable high contrast mode" IsChecked="{Binding HighContrastMode}"/>
+                                <TextBlock Text="Uses higher contrast colors for better visibility." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Audio Feedback" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="ChkAudioFeedback" Content="Enable audio feedback" IsChecked="{Binding EnableAudioFeedback}"/>
+                                <StackPanel Margin="0,12,0,0" IsEnabled="{Binding EnableAudioFeedback}">
+                                    <TextBlock Text="Volume" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Slider Minimum="0" Maximum="100" Value="{Binding AudioVolume, Converter={StaticResource VolumeConverter}}" Width="200" HorizontalAlignment="Left"/>
+                                        <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Width="40">
+                                            <TextBlock.Text>
+                                                <Binding Path="AudioVolume" StringFormat="{}{0:P0}"/>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock Text="Sound Type" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,12,0,4"/>
+                                    <ComboBox x:Name="SoundTypeCombo" MinWidth="180" SelectedItem="{Binding ScrollSound}">
+                                        <ComboBoxItem Content="Soft Tick"/>
+                                        <ComboBoxItem Content="Click"/>
+                                        <ComboBoxItem Content="Custom"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Tab 6: Statistics -->
+                    <StackPanel x:Name="TabStats" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtStatsTitle" Text="Statistics" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock x:Name="TxtStatsDesc" Text="View your scrolling statistics and usage patterns." Style="{StaticResource SectionDesc}"/>
+                        
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Session Statistics" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,16">
+                                        <TextBlock Text="Scroll Events" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="TxtSessionEvents" Text="0" FontSize="24" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,16">
+                                        <TextBlock Text="Pixels Scrolled" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="TxtSessionPixels" Text="0 px" FontSize="24" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                                        <TextBlock Text="Session Duration" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="TxtSessionTime" Text="0s" FontSize="24" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="All-Time Statistics" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,16">
+                                        <TextBlock Text="Total Scroll Events" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="TxtTotalEvents" Text="0" FontSize="24" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,16">
+                                        <TextBlock Text="Total Pixels" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="TxtTotalPixels" Text="0 px" FontSize="24" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="0">
+                                        <Button x:Name="BtnResetSession" Content="Reset Session" Click="OnResetSession" Style="{StaticResource SecondaryButton}" Margin="0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="1">
+                                        <Button x:Name="BtnResetAll" Content="Reset All Statistics" Click="OnResetAll" Style="{StaticResource SecondaryButton}" Margin="0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Tab 7: About -->
                     <StackPanel x:Name="TabAbout" Visibility="Collapsed">
                         <TextBlock x:Name="TxtAboutTitle" Text="About" Style="{StaticResource SectionHeader}"/>
                         <TextBlock x:Name="TxtAboutDesc" Text="Application information and system settings." Style="{StaticResource SectionDesc}"/>

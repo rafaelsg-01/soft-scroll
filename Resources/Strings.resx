@@ -29,8 +29,18 @@
   <!-- Nav -->
   <data name="NavScrolling" xml:space="preserve"><value>  🖱  Scrolling</value></data>
   <data name="NavBehavior" xml:space="preserve"><value>  ⚙  Behavior</value></data>
+  <data name="NavAppProfiles" xml:space="preserve"><value>  📱  App Profiles</value></data>
+  <data name="NavVisual" xml:space="preserve"><value>  ✨  Visual Feedback</value></data>
+  <data name="NavAccessibility" xml:space="preserve"><value>  ♿  Accessibility</value></data>
+  <data name="NavStats" xml:space="preserve"><value>  📊  Statistics</value></data>
   <data name="NavExcludedApps" xml:space="preserve"><value>  🚫  Excluded Apps</value></data>
   <data name="NavAbout" xml:space="preserve"><value>  ℹ  About</value></data>
+
+  <!-- App Profiles Tab -->
+  <data name="AppProfilesTitle" xml:space="preserve"><value>App Profiles</value></data>
+  <data name="AppProfilesDesc" xml:space="preserve"><value>Configure custom scroll settings for specific applications. Settings are automatically applied when you switch to that app.</value></data>
+  <data name="EnableAppProfiles" xml:space="preserve"><value>Enable app-specific profiles</value></data>
+  <data name="AddProfile" xml:space="preserve"><value>Add Profile…</value></data>
 
   <!-- Scrolling Tab -->
   <data name="ScrollingTitle" xml:space="preserve"><value>Scrolling</value></data>

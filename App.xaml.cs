@@ -8,18 +8,27 @@ public partial class App : System.Windows.Application
 {
     private TrayIcon? _tray;
     private GlobalMouseHook? _hook;
+    private GlobalHotkey? _hotkey;
     private SettingsViewModel? _vm;
     private SmoothScrollEngine? _engine;
     private ZoomSmoothEngine? _zoomEngine;
     private MiddleClickScrollEngine? _middleClickEngine;
     private MiddleClickOverlay? _middleClickOverlay;
+    private ScrollIndicator? _scrollIndicator;
     private SettingsWindow? _settingsWindow;
     private AppSettings _settings = null!;
+
+    // Debounced exclusion: check process name every 50 ms instead of every wheel event
+    private string? _lastExcludedProcess;
+    private long _lastExcludedCheck;
+    private const long EXCLUSION_CHECK_MS = 50;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         LoggingConfig.Configure();
-        
+
+        NativeMethods.timeBeginPeriod(1);
+
         base.OnStartup(e);
 
         _settings = AppSettings.Load();
@@ -45,6 +54,7 @@ public partial class App : System.Windows.Application
             _settings.Save();
             UpdateHookState();
         };
+        _tray.ToggleHotkeyRequested += (_, _) => ToggleEnabled();
 
         _engine = new SmoothScrollEngine(_settings);
         _zoomEngine = new ZoomSmoothEngine();
@@ -62,40 +72,64 @@ public partial class App : System.Windows.Application
         {
             Dispatcher.InvokeAsync(() => _middleClickOverlay?.HideOverlay());
         };
-        _middleClickEngine.DirectionChanged += (nx, ny) =>
+        _middleClickEngine.DirectionChanged += (nx, ny, magnitude) =>
         {
-            _middleClickOverlay?.UpdateDirection(nx, ny);
+            _middleClickOverlay?.UpdateDirection(nx, ny, magnitude);
         };
 
         _hook = new GlobalMouseHook();
         _hook.ShiftKeyHorizontal = _settings.ShiftKeyHorizontal;
 
+        // Setup hotkey for quick toggle (Ctrl+Alt+S)
+        if (_settings.EnableGlobalHotkey)
+        {
+            _hotkey = new GlobalHotkey(
+                id: 1,
+                modifiers: HotkeyConstants.MOD_CONTROL | HotkeyConstants.MOD_ALT | HotkeyConstants.MOD_NOREPEAT,
+                key: HotkeyConstants.VK_S
+            );
+            _hotkey.HotkeyPressed += (_, _) => ToggleEnabled();
+            _hotkey.Install();
+        }
+
         _hook.MouseWheel += (_, args) =>
         {
             if (!_settings.Enabled) return;
+            if (IsExcludedApp()) return;
 
-            var processName = CachedProcessHelper.GetProcessUnderCursor();
-            if (_settings.IsExcluded(processName)) return;
+            // Show scroll indicator if enabled
+            if (_settings.ShowScrollIndicator)
+            {
+                ShowScrollIndicator(args.Delta);
+            }
 
-            args.Handled = true;
-            _engine!.OnWheel(args.Delta);
+            // Check for app-specific profile
+            var profile = _settings.GetAppProfile(_lastExcludedProcess);
+            if (profile != null && profile.Enabled)
+            {
+                // Apply app profile settings temporarily
+                _engine!.OnWheelWithSettings(args.Delta, profile.ToAppSettings());
+            }
+            else
+            {
+                args.Handled = true;
+                _engine!.OnWheel(args.Delta);
+                ScrollStatistics.Instance.RecordScroll(args.Delta);
+            }
         };
         _hook.MouseHWheel += (_, args) =>
         {
             if (!_settings.Enabled) return;
-
-            var processName = CachedProcessHelper.GetProcessUnderCursor();
-            if (_settings.IsExcluded(processName)) return;
+            if (IsExcludedApp()) return;
 
             args.Handled = true;
             _engine!.OnHWheel(args.Delta);
+            ScrollStatistics.Instance.RecordScroll(args.Delta);
         };
         _hook.MouseZoomWheel += (_, args) =>
         {
             if (!_settings.Enabled || !_settings.ZoomSmoothing) return;
-
-            var processName = CachedProcessHelper.GetProcessUnderCursor();
-            if (_settings.IsExcluded(processName)) return;
+            if (IsExcludedApp()) return;
 
             args.Handled = true;
             _zoomEngine!.OnZoom(args.Delta);
@@ -131,6 +165,48 @@ public partial class App : System.Windows.Application
         Current.MainWindow = _settingsWindow;
     }
 
+    private void ToggleEnabled()
+    {
+        var newState = !_settings.Enabled;
+        _settings.Enabled = newState;
+        _settings.Save();
+        _vm!.Enabled = newState;
+        _tray?.UpdateEnabled(newState);
+        UpdateHookState();
+        Log.Information("Soft Scroll {State}", newState ? "enabled" : "disabled");
+    }
+
+    private bool IsExcludedApp()
+    {
+        var now = Environment.TickCount64;
+        if (now - _lastExcludedCheck > EXCLUSION_CHECK_MS)
+        {
+            _lastExcludedProcess = CachedProcessHelper.GetProcessUnderCursor();
+            _lastExcludedCheck = now;
+        }
+        return _settings.IsExcluded(_lastExcludedProcess);
+    }
+
+    private void ShowScrollIndicator(int speed)
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            _scrollIndicator ??= new ScrollIndicator();
+            var pos = GetCursorPosition();
+            _scrollIndicator.UpdateSpeed(speed);
+            if (!_scrollIndicator.IsVisible)
+            {
+                _scrollIndicator.ShowAt(pos.X, pos.Y, speed);
+            }
+        });
+    }
+
+    private System.Drawing.Point GetCursorPosition()
+    {
+        NativeMethods.GetCursorPos(out var point);
+        return new System.Drawing.Point(point.x, point.y);
+    }
+
     private void UpdateHookState()
     {
         if (_hook is null || _vm is null || _engine is null) return;
@@ -158,11 +234,13 @@ public partial class App : System.Windows.Application
     {
         base.OnExit(e);
         _hook?.Dispose();
+        _hotkey?.Dispose();
         _engine?.Dispose();
         _zoomEngine?.Dispose();
         _middleClickEngine?.Dispose();
         _tray?.Dispose();
         LoggingConfig.Shutdown();
+        NativeMethods.timeEndPeriod(1);
     }
 
     private void ShowSettingsWindow()

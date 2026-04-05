@@ -10,6 +10,7 @@ namespace SoftScroll;
 public partial class SettingsWindow : Window
 {
     private readonly SettingsViewModel _vm;
+    private readonly StatisticsViewModel _statsVm;
     private static readonly Regex _numRegex = new("^[0-9]+$");
     private int _activeTab;
 
@@ -17,6 +18,7 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         _vm = vm;
+        _statsVm = new StatisticsViewModel();
         DataContext = _vm;
 
         LocalizationManager.SetLanguage(_vm.Language);
@@ -38,6 +40,10 @@ public partial class SettingsWindow : Window
         // Nav
         NavScrolling.Content = L("NavScrolling");
         NavBehavior.Content  = L("NavBehavior");
+        NavAppProfiles.Content = L("NavAppProfiles");
+        NavVisual.Content = L("NavVisual");
+        NavAccessibility.Content = L("NavAccessibility");
+        NavStats.Content = L("NavStats");
         NavApps.Content      = L("NavExcludedApps");
         NavAbout.Content     = L("NavAbout");
 
@@ -88,6 +94,13 @@ public partial class SettingsWindow : Window
         BtnAddApp.Content    = L("AddApp");
         BtnRemoveApp.Content = L("RemoveSelected");
 
+        // App Profiles tab
+        TxtAppProfilesTitle.Text = L("AppProfilesTitle");
+        TxtAppProfilesDesc.Text = L("AppProfilesDesc");
+        ChkUseAppProfiles.Content = L("EnableAppProfiles");
+        BtnAddProfile.Content = L("AddProfile");
+        BtnRemoveProfile.Content = L("RemoveSelected");
+
         // About tab
         TxtAboutTitle.Text  = L("AboutTitle");
         TxtAboutDesc.Text   = L("AboutDesc");
@@ -124,19 +137,33 @@ public partial class SettingsWindow : Window
 
         TabScrolling.Visibility = index == 0 ? Visibility.Visible : Visibility.Collapsed;
         TabBehavior.Visibility  = index == 1 ? Visibility.Visible : Visibility.Collapsed;
-        TabApps.Visibility      = index == 2 ? Visibility.Visible : Visibility.Collapsed;
-        TabAbout.Visibility     = index == 3 ? Visibility.Visible : Visibility.Collapsed;
+        TabAppProfiles.Visibility = index == 2 ? Visibility.Visible : Visibility.Collapsed;
+        TabVisual.Visibility = index == 3 ? Visibility.Visible : Visibility.Collapsed;
+        TabAccessibility.Visibility = index == 4 ? Visibility.Visible : Visibility.Collapsed;
+        TabStats.Visibility = index == 5 ? Visibility.Visible : Visibility.Collapsed;
+        TabApps.Visibility      = index == 6 ? Visibility.Visible : Visibility.Collapsed;
+        TabAbout.Visibility     = index == 7 ? Visibility.Visible : Visibility.Collapsed;
 
         NavScrolling.Style = index == 0 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
         NavBehavior.Style  = index == 1 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
-        NavApps.Style      = index == 2 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
-        NavAbout.Style     = index == 3 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavAppProfiles.Style = index == 2 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavVisual.Style = index == 3 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavAccessibility.Style = index == 4 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavStats.Style = index == 5 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavApps.Style      = index == 6 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+        NavAbout.Style     = index == 7 ? (Style)Resources["NavButtonActive"] : (Style)Resources["NavButton"];
+
+        if (index == 5) RefreshStatistics();
     }
 
     private void OnNavScrolling(object sender, RoutedEventArgs e) => SwitchTab(0);
     private void OnNavBehavior(object sender, RoutedEventArgs e)  => SwitchTab(1);
-    private void OnNavApps(object sender, RoutedEventArgs e)      => SwitchTab(2);
-    private void OnNavAbout(object sender, RoutedEventArgs e)     => SwitchTab(3);
+    private void OnNavAppProfiles(object sender, RoutedEventArgs e) => SwitchTab(2);
+    private void OnNavVisual(object sender, RoutedEventArgs e) => SwitchTab(3);
+    private void OnNavAccessibility(object sender, RoutedEventArgs e) => SwitchTab(4);
+    private void OnNavStats(object sender, RoutedEventArgs e) => SwitchTab(5);
+    private void OnNavApps(object sender, RoutedEventArgs e)      => SwitchTab(6);
+    private void OnNavAbout(object sender, RoutedEventArgs e)     => SwitchTab(7);
 
     [DllImport("DwmApi")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
@@ -243,6 +270,36 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private void OnAddAppProfile(object sender, RoutedEventArgs e)
+    {
+        var dialog = new AddApplicationDialog();
+        dialog.Owner = this;
+        if (dialog.ShowDialog() == true && !string.IsNullOrEmpty(dialog.SelectedProcessName))
+        {
+            var settings = _vm.Snapshot();
+            var appName = dialog.SelectedAppName ?? dialog.SelectedProcessName ?? "Unknown";
+            var processName = dialog.SelectedProcessName ?? "Unknown";
+            var profile = AppProfile.FromAppSettings(appName, processName, settings);
+            _vm.AddAppProfile(profile);
+        }
+    }
+
+    private void OnRemoveAppProfile(object sender, RoutedEventArgs e)
+    {
+        if (AppProfilesList.SelectedItem is AppProfile selected)
+        {
+            _vm.RemoveAppProfile(selected);
+        }
+        else
+        {
+            System.Windows.MessageBox.Show(
+                LocalizationManager.Get("NoSelectionMsg"),
+                LocalizationManager.Get("NoSelectionTitle"),
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
+    }
+
     private void NumericOnly(object sender, TextCompositionEventArgs e)
     {
         e.Handled = !_numRegex.IsMatch(e.Text);
@@ -256,5 +313,42 @@ public partial class SettingsWindow : Window
             if (!_numRegex.IsMatch(text)) e.CancelCommand();
         }
         else e.CancelCommand();
+    }
+
+    private void RefreshStatistics()
+    {
+        _statsVm.RefreshAll();
+        TxtSessionEvents.Text = _statsVm.SessionEvents;
+        TxtSessionPixels.Text = _statsVm.SessionPixels;
+        TxtSessionTime.Text = _statsVm.ActiveTime;
+        TxtTotalEvents.Text = _statsVm.TotalEvents;
+        TxtTotalPixels.Text = _statsVm.TotalPixels;
+    }
+
+    private void OnResetSession(object sender, RoutedEventArgs e)
+    {
+        _statsVm.ResetSession();
+        RefreshStatistics();
+    }
+
+    private void OnResetAll(object sender, RoutedEventArgs e)
+    {
+        var result = System.Windows.MessageBox.Show(
+            "Are you sure you want to reset all statistics?",
+            "Reset Statistics",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+        
+        if (result == System.Windows.MessageBoxResult.Yes)
+        {
+            _statsVm.ResetAll();
+            RefreshStatistics();
+        }
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _statsVm.Stop();
+        base.OnClosed(e);
     }
 }
