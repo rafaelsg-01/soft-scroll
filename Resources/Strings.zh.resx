@@ -27,8 +27,19 @@
 
   <data name="NavScrolling" xml:space="preserve"><value>  🖱  滚动</value></data>
   <data name="NavBehavior" xml:space="preserve"><value>  ⚙  行为</value></data>
+  <data name="NavAppProfiles" xml:space="preserve"><value>  📱  应用配置</value></data>
+  <data name="NavVisual" xml:space="preserve"><value>  ✨  视觉反馈</value></data>
+  <data name="NavAccessibility" xml:space="preserve"><value>  ♿  无障碍</value></data>
+  <data name="NavStats" xml:space="preserve"><value>  📊  统计</value></data>
   <data name="NavExcludedApps" xml:space="preserve"><value>  🚫  排除应用</value></data>
   <data name="NavAbout" xml:space="preserve"><value>  ℹ  关于</value></data>
+
+  <!-- App Profiles Tab -->
+  <data name="AppProfilesTitle" xml:space="preserve"><value>应用配置</value></data>
+  <data name="AppProfilesDesc" xml:space="preserve"><value>为特定应用配置自定义滚动设置。切换到该应用时设置会自动应用。</value></data>
+  <data name="EnableAppProfiles" xml:space="preserve"><value>启用应用专属配置</value></data>
+  <data name="AddProfile" xml:space="preserve"><value>添加配置…</value></data>
+  <data name="ApplicationProfiles" xml:space="preserve"><value>应用配置</value></data>
 
   <data name="ScrollingTitle" xml:space="preserve"><value>滚动</value></data>
   <data name="ScrollingDesc" xml:space="preserve"><value>配置系统上平滑滚动的工作方式。</value></data>
@@ -66,6 +77,61 @@
   <data name="Friction" xml:space="preserve"><value>摩擦力</value></data>
   <data name="CurvePreview" xml:space="preserve"><value>曲线预览</value></data>
 
+  <!-- Visual Feedback Tab -->
+  <data name="VisualFeedbackTitle" xml:space="preserve"><value>视觉反馈</value></data>
+  <data name="VisualFeedbackDesc" xml:space="preserve"><value>自定义滚动期间的视觉指示器和反馈。</value></data>
+  <data name="ScrollIndicator" xml:space="preserve"><value>滚动指示器</value></data>
+  <data name="ShowScrollIndicator" xml:space="preserve"><value>显示滚动速度指示器</value></data>
+  <data name="IndicatorPosition" xml:space="preserve"><value>指示器位置</value></data>
+  <data name="IndicatorDuration" xml:space="preserve"><value>指示器持续时间</value></data>
+  <data name="MiddleClickOverlay" xml:space="preserve"><value>中键滚动覆盖层</value></data>
+  <data name="MiddleClickOverlayDesc" xml:space="preserve"><value>自定义中键滚动时显示的视觉指示器。</value></data>
+  <data name="CursorSize" xml:space="preserve"><value>光标大小</value></data>
+  <data name="EdgeBounce" xml:space="preserve"><value>边缘弹跳</value></data>
+  <data name="EnableEdgeBounce" xml:space="preserve"><value>启用边缘弹跳效果</value></data>
+  <data name="BounceStrength" xml:space="preserve"><value>弹跳强度</value></data>
+
+  <!-- Accessibility Tab -->
+  <data name="AccessibilityTitle" xml:space="preserve"><value>无障碍</value></data>
+  <data name="AccessibilityDesc" xml:space="preserve"><value>帮助不同需求用户的无障碍功能。</value></data>
+  <data name="ScreenReaderAnnouncements" xml:space="preserve"><value>屏幕阅读器公告</value></data>
+  <data name="EnableScreenReader" xml:space="preserve"><value>启用屏幕阅读器公告</value></data>
+  <data name="AnnounceSpeedChanges" xml:space="preserve"><value>播报滚动速度变化</value></data>
+  <data name="AnnounceScrollPosition" xml:space="preserve"><value>播报滚动位置</value></data>
+  <data name="HighContrastMode" xml:space="preserve"><value>高对比度模式</value></data>
+  <data name="EnableHighContrast" xml:space="preserve"><value>启用高对比度模式</value></data>
+  <data name="HighContrastDesc" xml:space="preserve"><value>使用更高对比度的颜色以获得更好的可见性。</value></data>
+  <data name="AudioFeedback" xml:space="preserve"><value>音频反馈</value></data>
+  <data name="EnableAudioFeedback" xml:space="preserve"><value>启用音频反馈</value></data>
+  <data name="Volume" xml:space="preserve"><value>音量</value></data>
+  <data name="SoundType" xml:space="preserve"><value>声音类型</value></data>
+  <data name="SoundSoftTick" xml:space="preserve"><value>柔和滴答</value></data>
+  <data name="SoundClick" xml:space="preserve"><value>点击</value></data>
+  <data name="SoundCustom" xml:space="preserve"><value>自定义</value></data>
+
+  <!-- Statistics Tab -->
+  <data name="StatisticsTitle" xml:space="preserve"><value>统计</value></data>
+  <data name="StatisticsDesc" xml:space="preserve"><value>查看滚动统计和使用模式。</value></data>
+  <data name="SessionStatistics" xml:space="preserve"><value>当前会话统计</value></data>
+  <data name="ScrollEvents" xml:space="preserve"><value>滚动事件</value></data>
+  <data name="PixelsScrolled" xml:space="preserve"><value>已滚动像素</value></data>
+  <data name="SessionDuration" xml:space="preserve"><value>会话时长</value></data>
+  <data name="AllTimeStatistics" xml:space="preserve"><value>全部时间统计</value></data>
+  <data name="TotalScrollEvents" xml:space="preserve"><value>总滚动事件</value></data>
+  <data name="TotalPixels" xml:space="preserve"><value>总像素</value></data>
+  <data name="ResetSession" xml:space="preserve"><value>重置会话</value></data>
+  <data name="ResetAllStatistics" xml:space="preserve"><value>重置所有统计</value></data>
+  <data name="ResetStatisticsConfirm" xml:space="preserve"><value>确定要重置所有统计数据吗？</value></data>
+  <data name="ResetStatisticsTitle" xml:space="preserve"><value>重置统计</value></data>
+
+  <!-- Add Application Dialog -->
+  <data name="AddApplicationTitle" xml:space="preserve"><value>添加应用</value></data>
+  <data name="SelectApplicationToExclude" xml:space="preserve"><value>选择一个要排除的应用：</value></data>
+  <data name="Browse" xml:space="preserve"><value>浏览…</value></data>
+  <data name="Add" xml:space="preserve"><value>添加</value></data>
+  <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="SelectApplication" xml:space="preserve"><value>选择应用</value></data>
+
   <data name="ExcludedAppsTitle" xml:space="preserve"><value>排除应用</value></data>
   <data name="ExcludedAppsDesc" xml:space="preserve"><value>平滑滚动将在这些应用程序中被禁用。在打开设置之前先聚焦一个应用，然后点击添加。</value></data>
   <data name="AddApp" xml:space="preserve"><value>添加应用…</value></data>
@@ -83,6 +149,14 @@
   <data name="ResetDesc" xml:space="preserve"><value>将所有设置恢复为出厂默认值。</value></data>
   <data name="ResetToDefaults" xml:space="preserve"><value>恢复默认</value></data>
   <data name="Language" xml:space="preserve"><value>语言</value></data>
+
+  <!-- Tray Icon -->
+  <data name="TraySettings" xml:space="preserve"><value>设置...</value></data>
+  <data name="TrayEnabled" xml:space="preserve"><value>已启用</value></data>
+  <data name="TrayDisabled" xml:space="preserve"><value>已禁用</value></data>
+  <data name="TrayToggleHotkey" xml:space="preserve"><value>使用 Ctrl+Alt+S 切换</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>退出</value></data>
+  <data name="AppName" xml:space="preserve"><value>Soft Scroll</value></data>
 
   <data name="FooterHint" xml:space="preserve"><value>点击保存后更改才会生效。</value></data>
   <data name="Close" xml:space="preserve"><value>关闭</value></data>

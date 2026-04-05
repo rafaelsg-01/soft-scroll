@@ -1,6 +1,12 @@
 using System;
 using System.Windows;
 using Serilog;
+using SoftScroll.Core;
+using SoftScroll.Hooks;
+using SoftScroll.Native;
+using SoftScroll.Settings;
+using SoftScroll.Infrastructure;
+using SoftScroll.UI;
 
 namespace SoftScroll;
 
@@ -36,6 +42,7 @@ public partial class App : System.Windows.Application
         _vm.SettingsChanged += (_, _) =>
         {
             _tray?.UpdateEnabled(_vm.Enabled);
+            _tray?.RefreshLocalization();
             var snapshot = _vm.Snapshot();
             _settings = snapshot;
             _engine?.ApplySettings(snapshot);

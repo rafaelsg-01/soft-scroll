@@ -41,6 +41,7 @@
   <data name="AppProfilesDesc" xml:space="preserve"><value>Configure custom scroll settings for specific applications. Settings are automatically applied when you switch to that app.</value></data>
   <data name="EnableAppProfiles" xml:space="preserve"><value>Enable app-specific profiles</value></data>
   <data name="AddProfile" xml:space="preserve"><value>Add Profile…</value></data>
+  <data name="ApplicationProfiles" xml:space="preserve"><value>Application Profiles</value></data>
 
   <!-- Scrolling Tab -->
   <data name="ScrollingTitle" xml:space="preserve"><value>Scrolling</value></data>
@@ -81,6 +82,53 @@
   <data name="Friction" xml:space="preserve"><value>Friction</value></data>
   <data name="CurvePreview" xml:space="preserve"><value>Curve Preview</value></data>
 
+  <!-- Visual Feedback Tab -->
+  <data name="VisualFeedbackTitle" xml:space="preserve"><value>Visual Feedback</value></data>
+  <data name="VisualFeedbackDesc" xml:space="preserve"><value>Customize the visual indicators and feedback during scrolling.</value></data>
+  <data name="ScrollIndicator" xml:space="preserve"><value>Scroll Indicator</value></data>
+  <data name="ShowScrollIndicator" xml:space="preserve"><value>Show scroll speed indicator</value></data>
+  <data name="IndicatorPosition" xml:space="preserve"><value>Indicator Position</value></data>
+  <data name="IndicatorDuration" xml:space="preserve"><value>Indicator Duration</value></data>
+  <data name="MiddleClickOverlay" xml:space="preserve"><value>Middle-Click Overlay</value></data>
+  <data name="MiddleClickOverlayDesc" xml:space="preserve"><value>Customize the visual indicator shown during middle-click scrolling.</value></data>
+  <data name="CursorSize" xml:space="preserve"><value>Cursor Size</value></data>
+  <data name="EdgeBounce" xml:space="preserve"><value>Edge Bounce</value></data>
+  <data name="EnableEdgeBounce" xml:space="preserve"><value>Enable edge bounce effect</value></data>
+  <data name="BounceStrength" xml:space="preserve"><value>Bounce Strength</value></data>
+
+  <!-- Accessibility Tab -->
+  <data name="AccessibilityTitle" xml:space="preserve"><value>Accessibility</value></data>
+  <data name="AccessibilityDesc" xml:space="preserve"><value>Accessibility features to assist users with different needs.</value></data>
+  <data name="ScreenReaderAnnouncements" xml:space="preserve"><value>Screen Reader Announcements</value></data>
+  <data name="EnableScreenReader" xml:space="preserve"><value>Enable screen reader announcements</value></data>
+  <data name="AnnounceSpeedChanges" xml:space="preserve"><value>Announce scroll speed changes</value></data>
+  <data name="AnnounceScrollPosition" xml:space="preserve"><value>Announce scroll position</value></data>
+  <data name="HighContrastMode" xml:space="preserve"><value>High Contrast Mode</value></data>
+  <data name="EnableHighContrast" xml:space="preserve"><value>Enable high contrast mode</value></data>
+  <data name="HighContrastDesc" xml:space="preserve"><value>Uses higher contrast colors for better visibility.</value></data>
+  <data name="AudioFeedback" xml:space="preserve"><value>Audio Feedback</value></data>
+  <data name="EnableAudioFeedback" xml:space="preserve"><value>Enable audio feedback</value></data>
+  <data name="Volume" xml:space="preserve"><value>Volume</value></data>
+  <data name="SoundType" xml:space="preserve"><value>Sound Type</value></data>
+  <data name="SoundSoftTick" xml:space="preserve"><value>Soft Tick</value></data>
+  <data name="SoundClick" xml:space="preserve"><value>Click</value></data>
+  <data name="SoundCustom" xml:space="preserve"><value>Custom</value></data>
+
+  <!-- Statistics Tab -->
+  <data name="StatisticsTitle" xml:space="preserve"><value>Statistics</value></data>
+  <data name="StatisticsDesc" xml:space="preserve"><value>View your scrolling statistics and usage patterns.</value></data>
+  <data name="SessionStatistics" xml:space="preserve"><value>Session Statistics</value></data>
+  <data name="ScrollEvents" xml:space="preserve"><value>Scroll Events</value></data>
+  <data name="PixelsScrolled" xml:space="preserve"><value>Pixels Scrolled</value></data>
+  <data name="SessionDuration" xml:space="preserve"><value>Session Duration</value></data>
+  <data name="AllTimeStatistics" xml:space="preserve"><value>All-Time Statistics</value></data>
+  <data name="TotalScrollEvents" xml:space="preserve"><value>Total Scroll Events</value></data>
+  <data name="TotalPixels" xml:space="preserve"><value>Total Pixels</value></data>
+  <data name="ResetSession" xml:space="preserve"><value>Reset Session</value></data>
+  <data name="ResetAllStatistics" xml:space="preserve"><value>Reset All Statistics</value></data>
+  <data name="ResetStatisticsConfirm" xml:space="preserve"><value>Are you sure you want to reset all statistics?</value></data>
+  <data name="ResetStatisticsTitle" xml:space="preserve"><value>Reset Statistics</value></data>
+
   <!-- Excluded Apps Tab -->
   <data name="ExcludedAppsTitle" xml:space="preserve"><value>Excluded Apps</value></data>
   <data name="ExcludedAppsDesc" xml:space="preserve"><value>Smooth scrolling will be disabled for these applications. Focus on an app before opening Settings, then click Add.</value></data>
@@ -100,6 +148,14 @@
   <data name="ResetDesc" xml:space="preserve"><value>Restore all settings to their factory defaults.</value></data>
   <data name="ResetToDefaults" xml:space="preserve"><value>Reset to Defaults</value></data>
   <data name="Language" xml:space="preserve"><value>Language</value></data>
+
+  <!-- Tray Icon -->
+  <data name="TraySettings" xml:space="preserve"><value>Settings...</value></data>
+  <data name="TrayEnabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="TrayDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="TrayToggleHotkey" xml:space="preserve"><value>Toggle with Ctrl+Alt+S</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>Exit</value></data>
+  <data name="AppName" xml:space="preserve"><value>Soft Scroll</value></data>
 
   <!-- Footer -->
   <data name="FooterHint" xml:space="preserve"><value>Changes are applied when you click Save.</value></data>
