@@ -43,7 +43,7 @@ GlobalMouseHook (WH_MOUSE_LL)
 | Component | Responsibility |
 |-----------|---------------|
 | `App.xaml.cs` | Composition root. Wires hook → engines → tray/UI. Manages lifecycle. |
-| `GlobalMouseHook.cs` | Win32 `WH_MOUSE_LL` hook. Dispatches wheel/horizontal/zoom/middle-click events. Filters injected events via `LLMHF_INJECTED` flags. |
+| `GlobalMouseHook.cs` | Win32 `WH_MOUSE_LL` hook. Dispatches wheel/horizontal/zoom/middle-click events. Filters injected events via `LLMHF_INJECTED` flags. Uses `KeyboardStateCache` for efficient modifier key detection. |
 | `SmoothScrollEngine.cs` | 120fps background thread. Accumulates pixel targets per notch, applies acceleration + easing, emits fractional wheel pulses. Supports vertical & horizontal axes. Includes optional momentum (beta). |
 | `ZoomSmoothEngine.cs` | 120fps background thread. Smooths Ctrl+wheel zoom with fixed CubicOut 150ms easing. |
 | `MiddleClickScrollEngine.cs` | 120fps background thread. Converts mouse displacement (dead-zone compensated) into smooth scroll deltas via quadratic speed curve. |
@@ -52,6 +52,8 @@ GlobalMouseHook (WH_MOUSE_LL)
 | `SettingsWindow.xaml(.cs)` | WPF settings UI. Two-way binding to `SettingsViewModel`. |
 | `TrayIcon.cs` | Windows Forms `NotifyIcon`. Context menu: Settings, Enable/Disable, Exit. |
 | `MiddleClickOverlay.xaml(.cs)` | Transparent WPF window. Visualizes scroll direction/speed during middle-click scroll. |
+| `AddApplicationDialog.xaml(.cs)` | Dialog for selecting applications for exclusion/profiles. Lists running processes with icons. |
+| `AdvancedSettings.cs` | Advanced features including `AppProfile`, `ScrollStatistics`, `PresetManager`, `MiddleClickSettings`, `AccessibilitySettings`. |
 
 ### Threading Model
 
@@ -66,14 +68,14 @@ All Win32 interop is centralized in `NativeMethods.cs`. Previously duplicated ac
 
 | Class | Purpose |
 |-------|---------|
-| `ProcessHelper` | Gets process name under cursor via Win32 calls (used for exclusion list). |
-| `CachedProcessHelper` | Caches process-under-cursor with 100ms TTL to avoid repeated Win32 calls on every wheel event. |
+| `CachedProcessHelper` | Caches process-under-cursor with 100ms TTL + HWND change detection. Single source for process detection. |
+| `KeyboardStateCache` | Caches Shift/Ctrl/Alt key states at 60fps to avoid repeated GetAsyncKeyState P/Invoke calls in hook callback. |
 | `NativeMethods` | Centralized P/Invoke signatures and Win32 struct definitions. All interop lives here. |
 | `StartupManager` | Adds/removes app from `HKCU\...\Run` registry key for auto-start. |
 | `ThemeHelper` | Detects Windows light/dark mode via registry; provides hardcoded color palettes. |
 | `LocalizationManager` | Manages language selection; loads `.resx` resource files. |
 | `LoggingConfig` | Serilog setup (daily rolling logs, 7-day retention). |
-| `Constants.cs` | `ScrollConstants` — centralized constants (`WHEEL_DELTA=120`, `EMIT_UNIT=12`, `FRAME_RATE=120`, etc.). |
+| `Constants.cs` | `ScrollConstants` - centralized constants (`WHEEL_DELTA=120`, `EMIT_UNIT=12`, `FRAME_RATE=120`, etc.). |
 | `EasingCurveCanvas.cs` | WPF drawing visual for easing curve preview in settings UI. |
 
 ### Key Design Decisions
@@ -81,5 +83,7 @@ All Win32 interop is centralized in `NativeMethods.cs`. Previously duplicated ac
 - **Event swallowing**: When `args.Handled = true`, the hook returns `(IntPtr)1` to prevent Windows from delivering the native event.
 - **Fractional accumulator**: Engines accumulate fractional wheel units and only emit integer pulses when `|accum| >= 1.0`, reducing `SendInput` overhead without losing precision.
 - **Injected event filtering**: `GlobalMouseHook` ignores events with `LLMHF_INJECTED` or `LLMHF_LOWER_IL_INJECTED` flags to prevent feedback loops from its own `SendInput` calls.
-- **Per-process exclusion**: Checks `ProcessHelper.GetProcessUnderCursor()` on every wheel event against the `ExcludedApps` list (case-insensitive exact match).
+- **Per-process exclusion**: Checks `CachedProcessHelper.GetProcessUnderCursor()` on every wheel event against the `ExcludedApps` list (case-insensitive exact match).
+- **Per-app profiles**: `AppProfile` system allows different scroll settings per application. Detected via `CachedProcessHelper`, applied via `OnWheelWithSettings()`.
 - **Settings sync pattern**: `SettingsViewModel` mirrors `AppSettings` fields. Changes fire `SettingsChanged`, which in `App` takes a `Snapshot()` and pushes to all engines via `ApplySettings()`.
+- **Keyboard state caching**: Modifier keys (Shift/Ctrl/Alt) are cached at 60fps to avoid per-event GetAsyncKeyState calls in the hot hook path.

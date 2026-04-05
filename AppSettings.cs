@@ -19,30 +19,51 @@ public sealed class AppSettings
 {
     public bool Enabled { get; set; } = true;
 
+    // ── Scroll Settings ─────────────────────────────────────────────
     public int StepSizePx { get; set; } = 120;
     public int AnimationTimeMs { get; set; } = 360;
     public int AccelerationDeltaMs { get; set; } = 70;
     public int AccelerationMax { get; set; } = 7;
     public int TailToHeadRatio { get; set; } = 3;
-
     public bool AnimationEasing { get; set; } = true;
     public EasingMode EasingMode { get; set; } = EasingMode.ExponentialOut;
+
+    // ── Direction & Horizontal ──────────────────────────────────────
     public bool ShiftKeyHorizontal { get; set; } = true;
     public bool HorizontalSmoothness { get; set; } = true;
     public bool ReverseWheelDirection { get; set; } = false;
 
+    // ── Startup & UI ────────────────────────────────────────────────
     public bool StartWithWindows { get; set; } = false;
     public bool StartMinimized { get; set; } = true;
-
     public string Language { get; set; } = "en";
 
+    // ── Advanced Features ──────────────────────────────────────────
     public bool ZoomSmoothing { get; set; } = true;
     public bool MomentumEnabled { get; set; } = false;
     public int MomentumFriction { get; set; } = 50;
     public bool MiddleClickScroll { get; set; } = true;
     public int MiddleClickDeadZone { get; set; } = 10;
 
+    // ── App Management ─────────────────────────────────────────────
     public List<string> ExcludedApps { get; set; } = new();
+    public List<AppProfile> AppProfiles { get; set; } = new();
+    public bool UseAppProfiles { get; set; } = true;
+
+    // ── Quick Toggle ────────────────────────────────────────────────
+    public bool EnableGlobalHotkey { get; set; } = true;
+    public bool ShowTrayIconState { get; set; } = true;
+
+    // ── Visual Feedback ─────────────────────────────────────────────
+    public bool ShowScrollIndicator { get; set; } = false;
+    public int ScrollIndicatorDurationMs { get; set; } = 500;
+    public IndicatorPosition IndicatorPosition { get; set; } = IndicatorPosition.TopRight;
+
+    // ── Middle-Click Settings ──────────────────────────────────────
+    public MiddleClickSettings MiddleClickConfig { get; set; } = new();
+
+    // ── Accessibility ─────────────────────────────────────────────
+    public AccessibilitySettings Accessibility { get; set; } = new();
 
     public static AppSettings CreateDefault() => new();
 
@@ -129,6 +150,19 @@ public sealed class AppSettings
             Language = "en";
 
         ExcludedApps ??= new List<string>();
+        AppProfiles ??= new List<AppProfile>();
+
+        MiddleClickConfig ??= new MiddleClickSettings();
+        Accessibility ??= new AccessibilitySettings();
+        ScrollIndicatorDurationMs = Math.Clamp(ScrollIndicatorDurationMs, 100, 3000);
+
+        if (MiddleClickConfig.CursorSize < 16) MiddleClickConfig.CursorSize = 16;
+        if (MiddleClickConfig.CursorSize > 64) MiddleClickConfig.CursorSize = 64;
+        if (MiddleClickConfig.BounceStrength < 0) MiddleClickConfig.BounceStrength = 0;
+        if (MiddleClickConfig.BounceStrength > 100) MiddleClickConfig.BounceStrength = 100;
+
+        if (Accessibility.AudioVolume < 0) Accessibility.AudioVolume = 0;
+        if (Accessibility.AudioVolume > 1) Accessibility.AudioVolume = 1;
     }
 
     public void Save()
@@ -154,5 +188,18 @@ public sealed class AppSettings
                 return true;
         }
         return false;
+    }
+
+    public AppProfile? GetAppProfile(string? processName)
+    {
+        if (!UseAppProfiles || string.IsNullOrEmpty(processName))
+            return null;
+
+        foreach (var profile in AppProfiles)
+        {
+            if (string.Equals(profile.ProcessName, processName, StringComparison.OrdinalIgnoreCase))
+                return profile;
+        }
+        return null;
     }
 }
