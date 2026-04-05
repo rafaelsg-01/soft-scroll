@@ -655,9 +655,9 @@
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding AppName}" FontWeight="SemiBold" Width="140"/>
-                                                <TextBlock x:Name="TxtStepLabel" Foreground="{DynamicResource TextSecondaryBrush}" Margin="16,0,4,0"/>
+                                                <TextBlock Text="Step:" Foreground="{DynamicResource TextSecondaryBrush}" Margin="16,0,4,0"/>
                                                 <TextBlock Text="{Binding StepSizePx}" Width="40"/>
-                                                <TextBlock x:Name="TxtMsLabel" Foreground="{DynamicResource TextTertiaryBrush}" Margin="4,0"/>
+                                                <TextBlock Text=" ms | " Foreground="{DynamicResource TextTertiaryBrush}" Margin="4,0"/>
                                                 <TextBlock Text="{Binding EasingMode}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                             </StackPanel>
                                         </DataTemplate>

@@ -147,8 +147,6 @@ public partial class SettingsWindow : Window
         TxtAppProfilesDesc.Text = L("AppProfilesDesc");
         ChkUseAppProfiles.Content = L("EnableAppProfiles");
         TxtAppProfilesListHeader.Text = L("ApplicationProfiles");
-        TxtStepLabel.Text = "Step:";
-        TxtMsLabel.Text = "ms |";
         BtnAddProfile.Content = L("AddProfile");
         BtnRemoveProfile.Content = L("RemoveSelected");
 
