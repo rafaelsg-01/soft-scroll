@@ -22,6 +22,8 @@ public sealed class GlobalMouseHook : IDisposable
     private IntPtr _hook = IntPtr.Zero;
     private NativeMethods.HookProc? _proc;
 
+    private static readonly KeyboardStateCache _keyboardState = new();
+
     public bool IsInstalled => _hook != IntPtr.Zero;
 
     /// <summary>
@@ -67,11 +69,11 @@ public sealed class GlobalMouseHook : IDisposable
                 int delta = (short)((data.mouseData >> 16) & 0xffff);
                 var args = new MouseWheelEventArgs(delta);
 
-                if (IsCtrlPressed())
+                if (_keyboardState.IsCtrlPressed)
                 {
                     MouseZoomWheel?.Invoke(this, args);
                 }
-                else if (ShiftKeyHorizontal && IsShiftPressed())
+                else if (ShiftKeyHorizontal && _keyboardState.IsShiftPressed)
                 {
                     MouseHWheel?.Invoke(this, args);
                 }
@@ -108,14 +110,4 @@ public sealed class GlobalMouseHook : IDisposable
     }
 
     public void Dispose() => Uninstall();
-
-    private static bool IsShiftPressed()
-    {
-        return (NativeMethods.GetAsyncKeyState(NativeMethods.VK_SHIFT) & 0x8000) != 0;
-    }
-
-    private static bool IsCtrlPressed()
-    {
-        return (NativeMethods.GetAsyncKeyState(NativeMethods.VK_CONTROL) & 0x8000) != 0;
-    }
 }

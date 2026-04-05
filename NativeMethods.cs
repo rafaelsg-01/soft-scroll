@@ -60,6 +60,7 @@ internal static class NativeMethods
 
     internal const ushort VK_CONTROL = 0x11;
     internal const ushort VK_SHIFT = 0x10;
+    internal const ushort VK_MENU = 0x12;
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct INPUT { public int type; public InputUnion U; }
@@ -117,4 +118,66 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     internal static extern IntPtr GetAncestor(IntPtr hwnd, uint gaFlags);
+
+    // ── Timer Resolution ───────────────────────────────────────────
+
+    [DllImport("winmm.dll", SetLastError = true)]
+    internal static extern uint timeBeginPeriod(uint uMilliseconds);
+
+    [DllImport("winmm.dll", SetLastError = true)]
+    internal static extern uint timeEndPeriod(uint uMilliseconds);
+
+    // ── Display Settings ───────────────────────────────────────────
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    internal struct DEVMODE
+    {
+        private const int CCHDEVICENAME = 32;
+        private const int CCHFORMNAME = 32;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CCHDEVICENAME)]
+        public string dmDeviceName;
+        public short dmSpecVersion;
+        public short dmDriverVersion;
+        public short dmSize;
+        public short dmDriverExtra;
+        public int dmFields;
+        public int dmPositionX;
+        public int dmPositionY;
+        public int dmDisplayOrientation;
+        public int dmDisplayFixedOutput;
+        public short dmColor;
+        public short dmDuplex;
+        public short dmYResolution;
+        public short dmTTOption;
+        public short dmCollate;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CCHFORMNAME)]
+        public string dmFormName;
+        public short dmLogPixels;
+        public int dmBitsPerPel;
+        public int dmPelsWidth;
+        public int dmPelsHeight;
+        public int dmDisplayFlags;
+        public int dmDisplayFrequency;
+        public int dmICMMethod;
+        public int dmICMIntent;
+        public int dmMediaType;
+        public int dmDitherType;
+        public int dmReserved1;
+        public int dmReserved2;
+        public int dmPanningWidth;
+        public int dmPanningHeight;
+    }
+
+    private const int ENUM_CURRENT_SETTINGS = -1;
+
+    [DllImport("user32.dll", CharSet = CharSet.Ansi)]
+    internal static extern int EnumDisplaySettings(string? lpszDeviceName, int iModeNum, ref DEVMODE lpDevMode);
+
+    internal static int GetDisplayRefreshRate()
+    {
+        var dm = new DEVMODE { dmSize = (short)Marshal.SizeOf<DEVMODE>() };
+        if (EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref dm) != 0 && dm.dmDisplayFrequency > 0)
+            return dm.dmDisplayFrequency;
+        return 60; // fallback
+    }
 }
