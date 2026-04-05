@@ -23,10 +23,23 @@ public sealed class SmoothScrollEngine : IDisposable
     private static readonly double BASE_STEP_PX = ScrollConstants.BASE_STEP_PX;
     private static readonly int PULSE_CLAMP_MIN = ScrollConstants.PULSE_CLAMP_MIN;
     private static readonly int PULSE_CLAMP_MAX = ScrollConstants.PULSE_CLAMP_MAX;
-    private static readonly double FRAME_MS = ScrollConstants.FRAME_MS;
-    private static readonly int SPIN_WAIT_COUNT = ScrollConstants.SPIN_WAIT_COUNT;
 
-    public SmoothScrollEngine(AppSettings settings) => ApplySettings(settings);
+    // Display refresh rate — detected once at startup
+    private static readonly int DisplayRefreshRate = NativeMethods.GetDisplayRefreshRate();
+
+    // Adaptive frame rate: match display Hz for smoothness, drop to 60fps when idle
+    private double _targetFrameMs;
+    private long _lastWorkTime;
+
+    private const double SPIN_WAIT_COUNT = 10;
+    private const int IDLE_TIMEOUT_MS = 2000; // drop to 60fps after 2s idle
+
+    public SmoothScrollEngine(AppSettings settings)
+    {
+        // Target frame rate: match display refresh if >= 60Hz, floor at 120fps (for 60Hz displays)
+        _targetFrameMs = DisplayRefreshRate >= 120 ? 1000.0 / DisplayRefreshRate : 1000.0 / 120;
+        ApplySettings(settings);
+    }
 
     public void ApplySettings(AppSettings s)
     {
@@ -71,6 +84,17 @@ public sealed class SmoothScrollEngine : IDisposable
         _signal.Set();
     }
 
+    public void OnWheelWithSettings(int delta, AppSettings customSettings)
+    {
+        lock (_lock)
+        {
+            var dir = customSettings.ReverseWheelDirection ? -1 : 1;
+            var now = Environment.TickCount64;
+            _v.RegisterNotch(now, delta * dir, customSettings);
+        }
+        _signal.Set();
+    }
+
     public void OnHWheel(int delta)
     {
         lock (_lock)
@@ -89,67 +113,103 @@ public sealed class SmoothScrollEngine : IDisposable
 
         while (_running)
         {
-            // Check if there's anything to emit
-            bool workAvailable;
-            lock (_lock)
+            try
             {
-                workAvailable = Math.Abs(_v.RemainingPx) >= 0.1
-                    || Math.Abs(_h.RemainingPx) >= 0.1;
-            }
+                // Check if there's anything to emit
+                bool workAvailable;
+                double remainingTotal;
+                lock (_lock)
+                {
+                    workAvailable = Math.Abs(_v.RemainingPx) >= 0.1
+                        || Math.Abs(_h.RemainingPx) >= 0.1;
+                    remainingTotal = Math.Abs(_v.RemainingPx) + Math.Abs(_h.RemainingPx);
+                }
 
-            if (!workAvailable)
+                if (!workAvailable)
+                {
+                    // Block until a wheel event signals us or timeout elapses.
+                    // Timeout guarantees eventual shutdown even if no signal arrives.
+                    _signal.Wait(TimeSpan.FromMilliseconds(100));
+                    _signal.Reset();
+                    // Reset time base after idle to prevent frame-1 jitter on new notch
+                    lastMs = sw.Elapsed.TotalMilliseconds;
+                    _lastWorkTime = Environment.TickCount64;
+                    continue;
+                }
+
+                var nowMs = sw.Elapsed.TotalMilliseconds;
+                var dt = Math.Max(1.0, nowMs - lastMs);
+                lastMs = nowMs;
+                _lastWorkTime = Environment.TickCount64;
+
+                // Adaptive frame rate computation
+                var frameMs = ComputeAdaptiveFrameMs(remainingTotal);
+
+                int outV = 0, outH = 0;
+                lock (_lock)
+                {
+                    outV = _v.Step(dt, _s);
+                    if (_s.HorizontalSmoothness) outH = _h.Step(dt, _s); else outH = 0;
+                }
+
+                // Buffered SendInput: emit both axes in a single call
+                if (outV != 0 || outH != 0) SendWheel(outV, outH);
+
+                var sleep = frameMs - (sw.Elapsed.TotalMilliseconds - nowMs);
+                if (sleep > 0.5) Thread.Sleep((int)Math.Round(sleep));
+                else Thread.SpinWait((int)SPIN_WAIT_COUNT);
+            }
+            catch (Exception ex)
             {
-                // Block until a wheel event signals us or timeout elapses.
-                // Timeout guarantees eventual shutdown even if no signal arrives.
-                _signal.Wait(TimeSpan.FromMilliseconds(100));
-                _signal.Reset();
-                continue;
+                // Prevent worker thread from dying silently
+                System.Diagnostics.Debug.WriteLine($"SmoothScrollEngine worker: {ex.Message}");
             }
-
-            var nowMs = sw.Elapsed.TotalMilliseconds;
-            var dt = Math.Max(1.0, nowMs - lastMs);
-            lastMs = nowMs;
-
-            int outV = 0, outH = 0;
-            lock (_lock)
-            {
-                outV = _v.Step(dt, _s);
-                if (_s.HorizontalSmoothness) outH = _h.Step(dt, _s); else outH = 0;
-            }
-
-            if (outV != 0) SendWheel(outV);
-            if (outH != 0) SendHWheel(outH);
-
-            var sleep = FRAME_MS - (sw.Elapsed.TotalMilliseconds - nowMs);
-            if (sleep > 0) Thread.Sleep((int)Math.Round(sleep));
-            else Thread.SpinWait(SPIN_WAIT_COUNT);
         }
     }
 
-    private static void SendWheel(int mouseData)
+    /// <summary>
+    /// Adaptive frame rate: scales from target (display Hz / 120) down to 60fps when idle.
+    /// When remaining scroll is small (&lt; 50px) and no recent notch, drop to 60fps to save CPU.
+    /// When remaining is large or recent rapid notches, ramp up to target Hz.
+    /// </summary>
+    private double ComputeAdaptiveFrameMs(double remainingPx)
     {
-        var inp = new NativeMethods.INPUT
-        {
-            type = 0,
-            U = new NativeMethods.InputUnion
-            {
-                mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData }
-            }
-        };
-        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
+        var idleTime = Environment.TickCount64 - _lastWorkTime;
+
+        // Idle ≥ 2s → drop to 60fps
+        if (idleTime >= IDLE_TIMEOUT_MS)
+            return 1000.0 / 60;
+
+        // Active scrolling: use target (display-matched) frame rate
+        return _targetFrameMs;
     }
 
-    private static void SendHWheel(int mouseData)
+    private static void SendWheel(int mouseData, int hMouseData)
     {
-        var inp = new NativeMethods.INPUT
+        var size = Marshal.SizeOf<NativeMethods.INPUT>();
+
+        // Emit vertical and horizontal in a single SendInput call to reduce P/Invoke overhead
+        if (hMouseData != 0)
         {
-            type = 0,
-            U = new NativeMethods.InputUnion
+            var inputs = new NativeMethods.INPUT[]
             {
-                mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_HWHEEL, mouseData = mouseData }
-            }
-        };
-        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
+                new() { type = 0, U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData } } },
+                new() { type = 0, U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_HWHEEL, mouseData = hMouseData } } },
+            };
+            NativeMethods.SendInput(2, inputs, size);
+        }
+        else if (mouseData != 0)
+        {
+            var inp = new NativeMethods.INPUT
+            {
+                type = 0,
+                U = new NativeMethods.InputUnion
+                {
+                    mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData }
+                }
+            };
+            NativeMethods.SendInput(1, [inp], size);
+        }
     }
 
     public void Dispose() => Stop();

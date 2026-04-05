@@ -22,7 +22,7 @@ public sealed class MiddleClickScrollEngine : IDisposable
 
     public event Action<int, int>? Activated;   // (originX, originY)
     public event Action? Deactivated;
-    public event Action<double, double>? DirectionChanged; // (normalizedX, normalizedY) for overlay
+    public event Action<double, double, double>? DirectionChanged; // (normalizedX, normalizedY, magnitude) for overlay
 
     public void UpdateDeadZone(int px) { lock (_lock) _deadZone = px; }
 
@@ -83,69 +83,78 @@ public sealed class MiddleClickScrollEngine : IDisposable
 
         while (_running)
         {
-            if (!_active)
+            try
             {
-                _signal.Wait(TimeSpan.FromMilliseconds(100));
-                _signal.Reset();
-                accumV = 0;
-                accumH = 0;
-                continue;
+                if (!_active)
+                {
+                    _signal.Wait(TimeSpan.FromMilliseconds(100));
+                    _signal.Reset();
+                    // Reset time base after idle to prevent frame-1 jitter
+                    lastMs = sw.Elapsed.TotalMilliseconds;
+                    accumV = 0;
+                    accumH = 0;
+                    continue;
+                }
+
+                var nowMs = sw.Elapsed.TotalMilliseconds;
+                var dt = Math.Max(1.0, nowMs - lastMs);
+                lastMs = nowMs;
+
+                int dx, dy, dz;
+                lock (_lock)
+                {
+                    dx = _currentX - _originX;
+                    dy = _currentY - _originY;
+                    dz = _deadZone;
+                }
+
+                // Compute scroll speed from distance (with dead zone)
+                double speedV = 0, speedH = 0;
+                if (Math.Abs(dy) > dz)
+                {
+                    var effective = Math.Abs(dy) - dz;
+                    speedV = Math.Sign(dy) * SpeedCurve(effective) * dt * 0.01;
+                }
+                if (Math.Abs(dx) > dz)
+                {
+                    var effective = Math.Abs(dx) - dz;
+                    speedH = Math.Sign(dx) * SpeedCurve(effective) * dt * 0.01;
+                }
+
+                // Notify overlay of direction with magnitude
+                var maxDist = 200.0;
+                var nx = Math.Clamp(dx / maxDist, -1.0, 1.0);
+                var ny = Math.Clamp(dy / maxDist, -1.0, 1.0);
+                var magnitude = Math.Sqrt(nx * nx + ny * ny);
+                DirectionChanged?.Invoke(nx, ny, magnitude);
+
+                accumV += speedV;
+                accumH += speedH;
+
+                // Buffered SendInput: emit both axes in a single call
+                int vPulses = 0, hPulses = 0;
+                if (Math.Abs(accumV) >= 1.0)
+                {
+                    vPulses = (int)accumV;
+                    accumV -= vPulses;
+                }
+                if (Math.Abs(accumH) >= 1.0)
+                {
+                    hPulses = (int)accumH;
+                    accumH -= hPulses;
+                }
+
+                if (vPulses != 0 || hPulses != 0)
+                    SendWheel(-vPulses * WHEEL_DELTA, hPulses * WHEEL_DELTA);
+
+                var sleep = FRAME_MS - (sw.Elapsed.TotalMilliseconds - nowMs);
+                if (sleep > 0) Thread.Sleep((int)Math.Round(sleep));
+                else Thread.SpinWait(ScrollConstants.SPIN_WAIT_COUNT);
             }
-
-            var nowMs = sw.Elapsed.TotalMilliseconds;
-            var dt = Math.Max(1.0, nowMs - lastMs);
-            lastMs = nowMs;
-
-            int dx, dy, dz;
-            lock (_lock)
+            catch (Exception ex)
             {
-                dx = _currentX - _originX;
-                dy = _currentY - _originY;
-                dz = _deadZone;
+                System.Diagnostics.Debug.WriteLine($"MiddleClickScrollEngine worker: {ex.Message}");
             }
-
-            // Compute scroll speed from distance (with dead zone)
-            double speedV = 0, speedH = 0;
-            if (Math.Abs(dy) > dz)
-            {
-                var effective = Math.Abs(dy) - dz;
-                speedV = Math.Sign(dy) * SpeedCurve(effective) * dt * 0.01;
-            }
-            if (Math.Abs(dx) > dz)
-            {
-                var effective = Math.Abs(dx) - dz;
-                speedH = Math.Sign(dx) * SpeedCurve(effective) * dt * 0.01;
-            }
-
-            // Notify overlay of direction
-            var maxDist = 200.0;
-            DirectionChanged?.Invoke(
-                Math.Clamp(dx / maxDist, -1.0, 1.0),
-                Math.Clamp(dy / maxDist, -1.0, 1.0)
-            );
-
-            accumV += speedV;
-            accumH += speedH;
-
-            // Emit vertical scroll
-            if (Math.Abs(accumV) >= 1.0)
-            {
-                int pulses = (int)accumV;
-                accumV -= pulses;
-                SendWheel(-pulses * WHEEL_DELTA);
-            }
-
-            // Emit horizontal scroll
-            if (Math.Abs(accumH) >= 1.0)
-            {
-                int pulses = (int)accumH;
-                accumH -= pulses;
-                SendHWheel(pulses * WHEEL_DELTA);
-            }
-
-            var sleep = FRAME_MS - (sw.Elapsed.TotalMilliseconds - nowMs);
-            if (sleep > 0) Thread.Sleep((int)Math.Round(sleep));
-            else Thread.SpinWait(ScrollConstants.SPIN_WAIT_COUNT);
         }
     }
 
@@ -155,24 +164,31 @@ public sealed class MiddleClickScrollEngine : IDisposable
         return Math.Min(distance * distance * 0.001, 30.0);
     }
 
-    private static void SendWheel(int mouseData)
+    private static void SendWheel(int vMouseData, int hMouseData)
     {
-        var inp = new NativeMethods.INPUT
-        {
-            type = 0,
-            U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData } }
-        };
-        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
-    }
+        var size = Marshal.SizeOf<NativeMethods.INPUT>();
 
-    private static void SendHWheel(int mouseData)
-    {
-        var inp = new NativeMethods.INPUT
+        if (hMouseData != 0)
         {
-            type = 0,
-            U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_HWHEEL, mouseData = mouseData } }
-        };
-        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
+            var inputs = new NativeMethods.INPUT[]
+            {
+                new() { type = 0, U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = vMouseData } } },
+                new() { type = 0, U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_HWHEEL, mouseData = hMouseData } } },
+            };
+            NativeMethods.SendInput(2, inputs, size);
+        }
+        else if (vMouseData != 0)
+        {
+            var inp = new NativeMethods.INPUT
+            {
+                type = 0,
+                U = new NativeMethods.InputUnion
+                {
+                    mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = vMouseData }
+                }
+            };
+            NativeMethods.SendInput(1, [inp], size);
+        }
     }
 
     public void Dispose() => Stop();
