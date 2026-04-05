@@ -36,6 +36,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         MomentumFriction = s.MomentumFriction;
         MiddleClickScroll = s.MiddleClickScroll;
         MiddleClickDeadZone = s.MiddleClickDeadZone;
+        AutoDisableOnTouchpad = s.AutoDisableOnTouchpad;
         Language = s.Language;
         UseAppProfiles = s.UseAppProfiles;
 
@@ -90,6 +91,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         MomentumFriction = MomentumFriction,
         MiddleClickScroll = MiddleClickScroll,
         MiddleClickDeadZone = MiddleClickDeadZone,
+        AutoDisableOnTouchpad = AutoDisableOnTouchpad,
         ExcludedApps = new List<string>(ExcludedApps),
         UseAppProfiles = UseAppProfiles,
         AppProfiles = new List<AppProfile>(AppProfiles),
@@ -188,6 +190,9 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
     private int _middleClickDeadZone = 10;
     public int MiddleClickDeadZone { get => _middleClickDeadZone; set { if (Set(ref _middleClickDeadZone, value)) OnSettingsChanged(); } }
+
+    private bool _autoDisableOnTouchpad = true;
+    public bool AutoDisableOnTouchpad { get => _autoDisableOnTouchpad; set { if (Set(ref _autoDisableOnTouchpad, value)) OnSettingsChanged(); } }
 
     private bool _useAppProfiles = true;
     public bool UseAppProfiles { get => _useAppProfiles; set { if (Set(ref _useAppProfiles, value)) OnSettingsChanged(); } }

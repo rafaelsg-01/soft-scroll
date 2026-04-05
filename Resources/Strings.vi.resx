@@ -71,6 +71,8 @@
   <data name="AdvancedFeatures" xml:space="preserve"><value>Tính năng nâng cao</value></data>
   <data name="ZoomSmoothing" xml:space="preserve"><value>Làm mượt Ctrl+Thu phóng</value></data>
   <data name="MiddleClickScroll" xml:space="preserve"><value>Cuộn bằng nút giữa chuột nâng cao</value></data>
+  <data name="AutoDisableOnTouchpad" xml:space="preserve"><value>Tự động tắt khi dùng touchpad</value></data>
+  <data name="AutoDisableOnTouchpadDesc" xml:space="preserve"><value>Tự động tắt cuộn mượt khi sử dụng touchpad laptop. Hữu ích vì touchpad đã có sẵn cuộn mượt và quán tính.</value></data>
   <data name="MomentumScrolling" xml:space="preserve"><value>Cuộn quán tính</value></data>
   <data name="MomentumDesc" xml:space="preserve"><value>Nội dung tiếp tục trôi sau khi bạn ngừng cuộn.</value></data>
   <data name="EnableMomentum" xml:space="preserve"><value>Bật cuộn quán tính</value></data>
@@ -154,6 +156,7 @@
   <data name="TraySettings" xml:space="preserve"><value>Cài đặt...</value></data>
   <data name="TrayEnabled" xml:space="preserve"><value>Đã bật</value></data>
   <data name="TrayDisabled" xml:space="preserve"><value>Đã tắt</value></data>
+  <data name="TrayTouchpadActive" xml:space="preserve"><value>Touchpad đang dùng</value></data>
   <data name="TrayToggleHotkey" xml:space="preserve"><value>Bật/tắt với Ctrl+Alt+S</value></data>
   <data name="TrayExit" xml:space="preserve"><value>Thoát</value></data>
   <data name="AppName" xml:space="preserve"><value>Soft Scroll</value></data>
@@ -161,4 +164,10 @@
   <data name="FooterHint" xml:space="preserve"><value>Thay đổi được áp dụng khi bạn nhấn Lưu.</value></data>
   <data name="Close" xml:space="preserve"><value>Đóng</value></data>
   <data name="Save" xml:space="preserve"><value>Lưu</value></data>
+
+  <!-- Touchpad Detection Status -->
+  <data name="TouchpadActive" xml:space="preserve"><value>Touchpad phát hiện — Cuộn mượt bị tắt</value></data>
+  <data name="TouchpadActiveDesc" xml:space="preserve"><value>Phát hiện đầu vào từ touchpad. Cuộn mượt hiện bị tắt để tránh xung đột với quán tính touchpad có sẵn.</value></data>
+  <data name="TouchpadInactive" xml:space="preserve"><value>Chuột ngoài đang hoạt động — Cuộn mượt bật</value></data>
+  <data name="TouchpadInactiveDesc" xml:space="preserve"><value>Phát hiện chuột ngoài ({1} chuột, {0} touchpad). Cuộn mượt đang được bật.</value></data>
 </root>

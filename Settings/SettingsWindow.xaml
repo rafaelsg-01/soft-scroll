@@ -13,6 +13,8 @@
     <Window.Resources>
         <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <local:VolumeConverter x:Key="VolumeConverter"/>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <SolidColorBrush x:Key="BackgroundBrush" Color="#0A0A0B"/>
         <SolidColorBrush x:Key="SurfaceBrush" Color="#141416"/>
         <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#1C1C1F"/>
@@ -599,6 +601,16 @@
                                 <TextBlock x:Name="TxtAdvancedFeatures" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
                                 <CheckBox x:Name="ChkZoomSmoothing" IsChecked="{Binding ZoomSmoothing}"/>
                                 <CheckBox x:Name="ChkMiddleClickScroll" IsChecked="{Binding MiddleClickScroll}"/>
+                                <Border Height="1" Background="{DynamicResource SurfaceBorderBrush}" Margin="0,12,0,12"/>
+                                <CheckBox x:Name="ChkAutoDisableTouchpad" IsChecked="{Binding AutoDisableOnTouchpad}" Checked="OnAutoDisableTouchpadChanged" Unchecked="OnAutoDisableTouchpadChanged"/>
+                                <!-- Touchpad Detection Status -->
+                                <StackPanel x:Name="TouchpadStatusPanel" Margin="0,12,0,0" Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border x:Name="TouchpadStatusIndicator" Width="8" Height="8" CornerRadius="4" Background="{DynamicResource TextTertiaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtTouchpadStatus" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="TxtTouchpadInfo" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}" Margin="16,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource Card}">

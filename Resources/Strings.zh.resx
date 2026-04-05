@@ -71,6 +71,8 @@
   <data name="AdvancedFeatures" xml:space="preserve"><value>高级功能</value></data>
   <data name="ZoomSmoothing" xml:space="preserve"><value>平滑 Ctrl+缩放</value></data>
   <data name="MiddleClickScroll" xml:space="preserve"><value>增强中键滚动</value></data>
+  <data name="AutoDisableOnTouchpad" xml:space="preserve"><value>触摸板自动禁用</value></data>
+  <data name="AutoDisableOnTouchpadDesc" xml:space="preserve"><value>使用笔记本触摸板时自动禁用平滑滚动。因为触摸板本身已具有平滑和惯性滚动。</value></data>
   <data name="MomentumScrolling" xml:space="preserve"><value>惯性滚动</value></data>
   <data name="MomentumDesc" xml:space="preserve"><value>停止滚动后内容继续滑行。</value></data>
   <data name="EnableMomentum" xml:space="preserve"><value>启用惯性滚动</value></data>
@@ -154,6 +156,7 @@
   <data name="TraySettings" xml:space="preserve"><value>设置...</value></data>
   <data name="TrayEnabled" xml:space="preserve"><value>已启用</value></data>
   <data name="TrayDisabled" xml:space="preserve"><value>已禁用</value></data>
+  <data name="TrayTouchpadActive" xml:space="preserve"><value>触控板使用中</value></data>
   <data name="TrayToggleHotkey" xml:space="preserve"><value>使用 Ctrl+Alt+S 切换</value></data>
   <data name="TrayExit" xml:space="preserve"><value>退出</value></data>
   <data name="AppName" xml:space="preserve"><value>Soft Scroll</value></data>
@@ -161,4 +164,10 @@
   <data name="FooterHint" xml:space="preserve"><value>点击保存后更改才会生效。</value></data>
   <data name="Close" xml:space="preserve"><value>关闭</value></data>
   <data name="Save" xml:space="preserve"><value>保存</value></data>
+
+  <!-- Touchpad Detection Status -->
+  <data name="TouchpadActive" xml:space="preserve"><value>检测到触控板 - 平滑滚动已禁用</value></data>
+  <data name="TouchpadActiveDesc" xml:space="preserve"><value>检测到触控板输入。平滑滚动已禁用，以避免与内置触控板惯性冲突。</value></data>
+  <data name="TouchpadInactive" xml:space="preserve"><value>外接鼠标已激活 - 平滑滚动已启用</value></data>
+  <data name="TouchpadInactiveDesc" xml:space="preserve"><value>检测到外接鼠标 ({1} 个鼠标, {0} 个触控板)。平滑滚动已启用。</value></data>
 </root>

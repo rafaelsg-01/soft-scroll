@@ -37,7 +37,7 @@ public sealed class AppSettings
     // ── Startup & UI ────────────────────────────────────────────────
     public bool StartWithWindows { get; set; } = false;
     public bool StartMinimized { get; set; } = true;
-    public string Language { get; set; } = "en";
+    public string Language { get; set; } = LocalizationManager.DetectSystemLanguage();
 
     // ── Advanced Features ──────────────────────────────────────────
     public bool ZoomSmoothing { get; set; } = true;
@@ -45,6 +45,7 @@ public sealed class AppSettings
     public int MomentumFriction { get; set; } = 50;
     public bool MiddleClickScroll { get; set; } = true;
     public int MiddleClickDeadZone { get; set; } = 10;
+    public bool AutoDisableOnTouchpad { get; set; } = true;
 
     // ── App Management ─────────────────────────────────────────────
     public List<string> ExcludedApps { get; set; } = new();

@@ -23,7 +23,12 @@ public sealed class GlobalMouseHook : IDisposable
     private IntPtr _hook = IntPtr.Zero;
     private NativeMethods.HookProc? _proc;
 
-    private static readonly KeyboardStateCache _keyboardState = new();
+    private readonly KeyboardStateSampler _keyboard = new();
+
+    // Track middle-click state to avoid firing MouseMoved on every normal mouse move
+
+    // Track middle-click state to avoid firing MouseMoved on every normal mouse move
+    private volatile bool _middleClickActive;
 
     public bool IsInstalled => _hook != IntPtr.Zero;
 
@@ -42,6 +47,7 @@ public sealed class GlobalMouseHook : IDisposable
     public void Install()
     {
         if (IsInstalled) return;
+        _keyboard.Start();
         _proc = HookCallback;
         using var curProcess = System.Diagnostics.Process.GetCurrentProcess();
         using var curModule = curProcess.MainModule!;
@@ -53,6 +59,7 @@ public sealed class GlobalMouseHook : IDisposable
         if (!IsInstalled) return;
         NativeMethods.UnhookWindowsHookEx(_hook);
         _hook = IntPtr.Zero;
+        _keyboard.Stop();
     }
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
@@ -70,11 +77,11 @@ public sealed class GlobalMouseHook : IDisposable
                 int delta = (short)((data.mouseData >> 16) & 0xffff);
                 var args = new MouseWheelEventArgs(delta);
 
-                if (_keyboardState.IsCtrlPressed)
+                if (_keyboard.IsCtrlPressed)
                 {
                     MouseZoomWheel?.Invoke(this, args);
                 }
-                else if (ShiftKeyHorizontal && _keyboardState.IsShiftPressed)
+                else if (ShiftKeyHorizontal && _keyboard.IsShiftPressed)
                 {
                     MouseHWheel?.Invoke(this, args);
                 }
@@ -96,15 +103,20 @@ public sealed class GlobalMouseHook : IDisposable
             }
             else if (msg == NativeMethods.WM_MBUTTONDOWN)
             {
+                _middleClickActive = true;
                 MiddleButtonDown?.Invoke(this, new MousePositionEventArgs(data.pt.x, data.pt.y));
             }
             else if (msg == NativeMethods.WM_MBUTTONUP)
             {
+                _middleClickActive = false;
                 MiddleButtonUp?.Invoke(this, EventArgs.Empty);
             }
             else if (msg == NativeMethods.WM_MOUSEMOVE)
             {
-                MouseMoved?.Invoke(this, new MousePositionEventArgs(data.pt.x, data.pt.y));
+                // Only fire MouseMoved when middle-click scrolling is active
+                // to avoid lag from hundreds of callbacks per second
+                if (_middleClickActive)
+                    MouseMoved?.Invoke(this, new MousePositionEventArgs(data.pt.x, data.pt.y));
             }
         }
         return NativeMethods.CallNextHookEx(_hook, nCode, wParam, lParam);

@@ -22,9 +22,15 @@ public partial class App : System.Windows.Application
     private MiddleClickOverlay? _middleClickOverlay;
     private ScrollIndicator? _scrollIndicator;
     private SettingsWindow? _settingsWindow;
+    private InputDeviceDetector? _inputDetector;
+    private RawInputListener? _rawInputListener;
     private AppSettings _settings = null!;
 
+    // Static event for device state changes - used by SettingsWindow to update UI
+    public static event EventHandler<DeviceStateEventArgs>? DeviceStateChanged;
+
     // Debounced exclusion: check process name every 50 ms instead of every wheel event
+    private readonly object _exclusionLock = new();
     private string? _lastExcludedProcess;
     private long _lastExcludedCheck;
     private const long EXCLUSION_CHECK_MS = 50;
@@ -87,6 +93,27 @@ public partial class App : System.Windows.Application
         _hook = new GlobalMouseHook();
         _hook.ShiftKeyHorizontal = _settings.ShiftKeyHorizontal;
 
+        // Initialize touchpad detection
+        _inputDetector = new InputDeviceDetector();
+
+        // Subscribe to device type changes to update UI
+        _inputDetector.DeviceTypeChanged += (_, isTouchpad) =>
+        {
+            Dispatcher.InvokeAsync(() => {
+                UpdateDeviceStateUI(isTouchpad, _inputDetector.TouchpadCount, _inputDetector.MouseCount);
+                _tray?.UpdateTouchpadState(isTouchpad);
+            });
+        };
+
+        // Initialize Raw Input listener for device tracking
+        _rawInputListener = new RawInputListener(_inputDetector);
+
+        // Subscribe to devices changed event for re-enumeration
+        _rawInputListener.DevicesChanged += (_, _) =>
+        {
+            Dispatcher.InvokeAsync(() => UpdateDeviceStateUI(_inputDetector.ShouldDisableSmoothScroll(), _inputDetector.TouchpadCount, _inputDetector.MouseCount));
+        };
+
         // Setup hotkey for quick toggle (Ctrl+Alt+S)
         if (_settings.EnableGlobalHotkey)
         {
@@ -104,6 +131,15 @@ public partial class App : System.Windows.Application
             if (!_settings.Enabled) return;
             if (IsExcludedApp()) return;
 
+            // Auto-disable on touchpad if setting is enabled
+            if (_settings.AutoDisableOnTouchpad)
+            {
+                // First check device state (fallback)
+                _inputDetector?.OnScrollEvent();
+                if (_inputDetector?.ShouldDisableSmoothScroll() == true)
+                    return;
+            }
+
             // Show scroll indicator if enabled
             if (_settings.ShowScrollIndicator)
             {
@@ -111,7 +147,9 @@ public partial class App : System.Windows.Application
             }
 
             // Check for app-specific profile
-            var profile = _settings.GetAppProfile(_lastExcludedProcess);
+            string procName;
+            lock (_exclusionLock) { procName = _lastExcludedProcess; }
+            var profile = _settings.GetAppProfile(procName);
             if (profile != null && profile.Enabled)
             {
                 // Apply app profile settings temporarily
@@ -128,6 +166,15 @@ public partial class App : System.Windows.Application
         {
             if (!_settings.Enabled) return;
             if (IsExcludedApp()) return;
+
+            // Auto-disable on touchpad if setting is enabled
+            if (_settings.AutoDisableOnTouchpad)
+            {
+                // First check device state (fallback)
+                _inputDetector?.OnScrollEvent();
+                if (_inputDetector?.ShouldDisableSmoothScroll() == true)
+                    return;
+            }
 
             args.Handled = true;
             _engine!.OnHWheel(args.Delta);
@@ -159,7 +206,10 @@ public partial class App : System.Windows.Application
         UpdateHookState();
 
         bool shouldStartMinimized = _settings.StartWithWindows && _settings.StartMinimized;
-        
+
+        // Show settings window immediately — the heavy operations (icon loading, device
+        // enumeration, refresh rate detection) have already been deferred to background
+        // threads, so startup should be instant now.
         if (!shouldStartMinimized)
         {
             ShowSettingsWindow();
@@ -168,7 +218,17 @@ public partial class App : System.Windows.Application
         {
             Log.Information("Starting minimized to system tray");
         }
-        
+
+        // Ensure Raw Input listener initializes on the UI thread after window creation
+        if (_settings.AutoDisableOnTouchpad)
+        {
+            // Initialize Raw Input after settings window is created
+            Dispatcher.InvokeAsync(() => _rawInputListener?.Initialize(_settingsWindow!));
+        }
+
+        // Enumerate devices after Raw Input is registered
+        Dispatcher.InvokeAsync(() => _inputDetector?.EnumerateDevices());
+
         Current.MainWindow = _settingsWindow;
     }
 
@@ -246,6 +306,8 @@ public partial class App : System.Windows.Application
         _zoomEngine?.Dispose();
         _middleClickEngine?.Dispose();
         _tray?.Dispose();
+        _inputDetector?.Dispose();
+        _rawInputListener?.Dispose();
         LoggingConfig.Shutdown();
         NativeMethods.timeEndPeriod(1);
     }
@@ -266,6 +328,28 @@ public partial class App : System.Windows.Application
                 _settingsWindow.WindowState = WindowState.Normal;
             _settingsWindow.Activate();
         }
+    }
+
+    /// <summary>
+    /// Called to update the UI when device state changes
+    /// </summary>
+    internal void UpdateDeviceStateUI(bool isTouchpad, int touchpadCount, int mouseCount)
+    {
+        DeviceStateChanged?.Invoke(this, new DeviceStateEventArgs(isTouchpad, touchpadCount, mouseCount));
+    }
+}
+
+public class DeviceStateEventArgs : EventArgs
+{
+    public bool IsTouchpadActive { get; }
+    public int TouchpadCount { get; }
+    public int MouseCount { get; }
+
+    public DeviceStateEventArgs(bool isTouchpadActive, int touchpadCount, int mouseCount)
+    {
+        IsTouchpadActive = isTouchpadActive;
+        TouchpadCount = touchpadCount;
+        MouseCount = mouseCount;
     }
 }
 

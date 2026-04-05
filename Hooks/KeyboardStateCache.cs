@@ -1,85 +1,57 @@
-using System;
+using System.Threading;
 using SoftScroll.Native;
 
 namespace SoftScroll.Hooks;
 
 /// <summary>
-/// Caches keyboard modifier key states to avoid repeated GetAsyncKeyState P/Invoke calls.
-/// Updates at a fixed rate (60fps) when queried, rather than on every hook callback.
+/// Background-thread keyboard state sampler.
+/// Polls modifier keys at fixed rate so the hook callback (hot path)
+/// can read them without any P/Invoke overhead.
 /// </summary>
-internal sealed class KeyboardStateCache : IDisposable
+public sealed class KeyboardStateSampler
 {
-    private const int UpdateIntervalMs = 16; // ~60fps
+    private const int PollIntervalMs = 16; // ~60fps
 
-    private bool _shiftPressed;
-    private bool _ctrlPressed;
-    private bool _altPressed;
-    private long _lastUpdateTick;
+    private Thread? _thread;
+    private volatile bool _running;
+    private volatile bool _shift;
+    private volatile bool _ctrl;
+    private volatile bool _alt;
 
-    /// <summary>
-    /// Returns cached Shift key state. Updates if stale (>16ms since last check).
-    /// </summary>
-    public bool IsShiftPressed
-    {
-        get
-        {
-            UpdateIfStale();
-            return _shiftPressed;
-        }
-    }
+    public bool IsShiftPressed => _shift;
+    public bool IsCtrlPressed => _ctrl;
+    public bool IsAltPressed => _alt;
 
-    /// <summary>
-    /// Returns cached Ctrl key state. Updates if stale (>16ms since last check).
-    /// </summary>
-    public bool IsCtrlPressed
-    {
-        get
-        {
-            UpdateIfStale();
-            return _ctrlPressed;
-        }
-    }
-
-    /// <summary>
-    /// Returns cached Alt key state. Updates if stale (>16ms since last check).
-    /// </summary>
-    public bool IsAltPressed
-    {
-        get
-        {
-            UpdateIfStale();
-            return _altPressed;
-        }
-    }
-
-    /// <summary>
-    /// Force update all keys immediately. Call this at the start of processing
-    /// if you need guaranteed fresh state for the current frame.
-    /// </summary>
     public void ForceUpdate()
     {
-        UpdateInternal();
+        _shift = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_SHIFT) & 0x8000) != 0;
+        _ctrl = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_CONTROL) & 0x8000) != 0;
+        _alt = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_MENU) & 0x8000) != 0;
     }
 
-    private void UpdateIfStale()
+    public void Start()
     {
-        var now = Environment.TickCount64;
-        if (now - _lastUpdateTick >= UpdateIntervalMs)
+        if (_running) return;
+        _running = true;
+        ForceUpdate(); // get initial state immediately
+        _thread = new Thread(WorkerLoop) { IsBackground = true, Name = "KeyboardStateSampler" };
+        _thread.Start();
+    }
+
+    private void WorkerLoop()
+    {
+        while (_running)
         {
-            UpdateInternal();
+            _shift = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_SHIFT) & 0x8000) != 0;
+            _ctrl = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_CONTROL) & 0x8000) != 0;
+            _alt = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_MENU) & 0x8000) != 0;
+            Thread.Sleep(PollIntervalMs);
         }
     }
 
-    private void UpdateInternal()
+    public void Stop()
     {
-        _shiftPressed = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_SHIFT) & 0x8000) != 0;
-        _ctrlPressed = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_CONTROL) & 0x8000) != 0;
-        _altPressed = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_MENU) & 0x8000) != 0;
-        _lastUpdateTick = Environment.TickCount64;
-    }
-
-    public void Dispose()
-    {
-        // No resources to dispose - pure computation
+        _running = false;
+        _thread?.Join(500);
     }
 }

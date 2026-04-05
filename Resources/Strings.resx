@@ -76,6 +76,8 @@
   <data name="AdvancedFeatures" xml:space="preserve"><value>Advanced Features</value></data>
   <data name="ZoomSmoothing" xml:space="preserve"><value>Smooth Ctrl+Zoom</value></data>
   <data name="MiddleClickScroll" xml:space="preserve"><value>Enhanced middle-click scroll</value></data>
+  <data name="AutoDisableOnTouchpad" xml:space="preserve"><value>Auto-disable on touchpad</value></data>
+  <data name="AutoDisableOnTouchpadDesc" xml:space="preserve"><value>Automatically disable smooth scrolling when using the laptop touchpad. Useful since touchpads already have smooth, inertial scrolling built in.</value></data>
   <data name="MomentumScrolling" xml:space="preserve"><value>Momentum Scrolling</value></data>
   <data name="MomentumDesc" xml:space="preserve"><value>Content continues drifting after you stop scrolling.</value></data>
   <data name="EnableMomentum" xml:space="preserve"><value>Enable momentum (inertia)</value></data>
@@ -153,6 +155,7 @@
   <data name="TraySettings" xml:space="preserve"><value>Settings...</value></data>
   <data name="TrayEnabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="TrayDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="TrayTouchpadActive" xml:space="preserve"><value>Touchpad Active</value></data>
   <data name="TrayToggleHotkey" xml:space="preserve"><value>Toggle with Ctrl+Alt+S</value></data>
   <data name="TrayExit" xml:space="preserve"><value>Exit</value></data>
   <data name="AppName" xml:space="preserve"><value>Soft Scroll</value></data>
@@ -161,4 +164,10 @@
   <data name="FooterHint" xml:space="preserve"><value>Changes are applied when you click Save.</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="Save" xml:space="preserve"><value>Save</value></data>
+
+  <!-- Touchpad Detection Status -->
+  <data name="TouchpadActive" xml:space="preserve"><value>Touchpad detected — Smooth scroll disabled</value></data>
+  <data name="TouchpadActiveDesc" xml:space="preserve"><value>Touchpad input detected. Smooth scrolling is currently disabled to avoid conflicts with the built-in touchpad inertia.</value></data>
+  <data name="TouchpadInactive" xml:space="preserve"><value>External mouse active — Smooth scroll enabled</value></data>
+  <data name="TouchpadInactiveDesc" xml:space="preserve"><value>External mouse detected ({0} touchpad(s), {1} mouse(es)). Smooth scrolling is enabled.</value></data>
 </root>

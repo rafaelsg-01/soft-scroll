@@ -26,11 +26,12 @@ public sealed class SmoothScrollEngine : IDisposable
     private static readonly int PULSE_CLAMP_MIN = ScrollConstants.PULSE_CLAMP_MIN;
     private static readonly int PULSE_CLAMP_MAX = ScrollConstants.PULSE_CLAMP_MAX;
 
-    // Display refresh rate — detected once at startup
-    private static readonly int DisplayRefreshRate = NativeMethods.GetDisplayRefreshRate();
+    // Display refresh rate — detected lazily on first Start() to avoid blocking startup
+    private static int? DisplayRefreshRate;
+    private static readonly object _refreshLock = new();
 
     // Adaptive frame rate: match display Hz for smoothness, drop to 60fps when idle
-    private double _targetFrameMs;
+    private double _targetFrameMs = 1000.0 / 120; // default 120fps for new instances
     private long _lastWorkTime;
 
     private const double SPIN_WAIT_COUNT = 10;
@@ -38,8 +39,6 @@ public sealed class SmoothScrollEngine : IDisposable
 
     public SmoothScrollEngine(AppSettings settings)
     {
-        // Target frame rate: match display refresh if >= 60Hz, floor at 120fps (for 60Hz displays)
-        _targetFrameMs = DisplayRefreshRate >= 120 ? 1000.0 / DisplayRefreshRate : 1000.0 / 120;
         ApplySettings(settings);
     }
 
@@ -53,6 +52,18 @@ public sealed class SmoothScrollEngine : IDisposable
 
     public void Start()
     {
+        // Detect display refresh rate on first start (lazy to avoid blocking app startup)
+        if (!DisplayRefreshRate.HasValue)
+        {
+            lock (_refreshLock)
+            {
+                if (!DisplayRefreshRate.HasValue)
+                    DisplayRefreshRate = NativeMethods.GetDisplayRefreshRate();
+            }
+            // Target frame rate: match display refresh if >= 60Hz, floor at 120fps
+            _targetFrameMs = DisplayRefreshRate.Value >= 120 ? 1000.0 / DisplayRefreshRate.Value : 1000.0 / 120;
+        }
+
         lock (_lock)
         {
             if (_running) return;

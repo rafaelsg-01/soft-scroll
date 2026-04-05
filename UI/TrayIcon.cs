@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Serilog;
 using SoftScroll.Infrastructure;
 using SoftScroll.Settings;
 
@@ -17,6 +18,8 @@ public sealed class TrayIcon : IDisposable
 
     private Icon? _iconEnabled;
     private Icon? _iconDisabled;
+    private Icon? _iconTouchpadActive;
+    private bool _isTouchpadActive;
 
     public event EventHandler? OpenSettingsRequested;
     public event EventHandler? ExitRequested;
@@ -27,9 +30,8 @@ public sealed class TrayIcon : IDisposable
     {
         _settings = settings;
 
-        // Load icons - use same icon but will change text/brightness based on state
-        _iconEnabled = LoadIconSafe();
-        _iconDisabled = CreateDisabledIcon(_iconEnabled);
+        // Start icon loading asynchronously to avoid blocking UI startup
+        LoadIconsAsync();
 
         var L = new Func<string, string>(LocalizationManager.Get);
 
@@ -67,12 +69,39 @@ public sealed class TrayIcon : IDisposable
         _notifyIcon.MouseUp += OnMouseUp;
     }
 
+    private async void LoadIconsAsync()
+    {
+        await Task.Run(() =>
+        {
+            _iconEnabled = LoadIconSafe();
+            _iconDisabled = CreateDisabledIcon(_iconEnabled);
+            _iconTouchpadActive = CreateTouchpadActiveIcon(_iconEnabled);
+        });
+
+        // Update tray icon on UI thread
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Icon = GetCurrentIcon();
+            }
+        });
+    }
+
     private string GetTrayTooltip()
     {
         var L = new Func<string, string>(LocalizationManager.Get);
+        string appName = L("AppName");
+        string enabledState = L("TrayEnabled");
+        
+        if (_isTouchpadActive)
+        {
+            return $"{appName} ({L("TrayTouchpadActive")})";
+        }
+        
         return _settings.Enabled 
-            ? $"{L("AppName")} ({L("TrayEnabled")})" 
-            : $"{L("AppName")} ({L("TrayDisabled")})";
+            ? $"{appName} ({enabledState})" 
+            : $"{appName} ({L("TrayDisabled")})";
     }
 
     private void OnMouseUp(object? sender, MouseEventArgs e)
@@ -137,11 +166,57 @@ public sealed class TrayIcon : IDisposable
         return Icon.FromHandle(disabledBitmap.GetHicon());
     }
 
+    private static Icon CreateTouchpadActiveIcon(Icon? original)
+    {
+        if (original == null) return SystemIcons.Application;
+
+        // Create an orange/yellow tinted version for touchpad active state
+        using var bitmap = original.ToBitmap();
+        var tintedBitmap = new Bitmap(bitmap.Width, bitmap.Height);
+
+        for (int x = 0; x < bitmap.Width; x++)
+        {
+            for (int y = 0; y < bitmap.Height; y++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.A > 0)
+                {
+                    // Add orange tint while preserving some of original color
+                    int r = Math.Min(255, (int)(pixel.R * 0.8 + 255 * 0.2));
+                    int g = Math.Min(255, (int)(pixel.G * 0.6 + 180 * 0.4));
+                    int b = Math.Min(255, (int)(pixel.B * 0.4));
+                    tintedBitmap.SetPixel(x, y, Color.FromArgb(pixel.A, r, g, b));
+                }
+            }
+        }
+
+        return Icon.FromHandle(tintedBitmap.GetHicon());
+    }
+
     public void UpdateEnabled(bool enabled)
     {
         _enabledItem.Checked = enabled;
         _notifyIcon.Text = GetTrayTooltip();
-        _notifyIcon.Icon = enabled ? _iconEnabled : _iconDisabled;
+        _notifyIcon.Icon = GetCurrentIcon();
+    }
+
+    public void UpdateTouchpadState(bool isTouchpad)
+    {
+        _isTouchpadActive = isTouchpad;
+        _notifyIcon.Text = GetTrayTooltip();
+        _notifyIcon.Icon = GetCurrentIcon();
+        Log.Information("[TrayIcon] Touchpad state changed: {IsTouchpad}", isTouchpad);
+    }
+
+    private Icon GetCurrentIcon()
+    {
+        if (_isTouchpadActive)
+        {
+            return _iconTouchpadActive ?? _iconEnabled ?? SystemIcons.Application;
+        }
+        return _settings.Enabled 
+            ? (_iconEnabled ?? SystemIcons.Application) 
+            : (_iconDisabled ?? SystemIcons.Application);
     }
 
     public void RefreshLocalization()
@@ -160,5 +235,6 @@ public sealed class TrayIcon : IDisposable
         _notifyIcon.Dispose();
         _iconEnabled?.Dispose();
         _iconDisabled?.Dispose();
+        _iconTouchpadActive?.Dispose();
     }
 }

@@ -39,4 +39,25 @@ public static class LocalizationManager
         var idx = Array.IndexOf(SupportedLanguages, CurrentLanguage);
         return idx >= 0 ? idx : 0;
     }
+
+    /// <summary>
+    /// Detects the system UI language and maps it to a supported language code.
+    /// Returns "en" if the system language is not supported.
+    /// </summary>
+    public static string DetectSystemLanguage()
+    {
+        var twoLetter = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+        foreach (var lang in SupportedLanguages)
+        {
+            if (twoLetter.Equals(lang, StringComparison.OrdinalIgnoreCase))
+                return lang;
+        }
+        var parent = CultureInfo.CurrentCulture.Parent.TwoLetterISOLanguageName;
+        foreach (var lang in SupportedLanguages)
+        {
+            if (parent.Equals(lang, StringComparison.OrdinalIgnoreCase))
+                return lang;
+        }
+        return "en";
+    }
 }

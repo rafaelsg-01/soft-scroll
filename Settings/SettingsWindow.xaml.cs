@@ -3,11 +3,13 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using SoftScroll.Infrastructure;
 using SoftScroll.ViewModels;
 using SoftScroll.UI;
+using SoftScroll;
 
 namespace SoftScroll.Settings;
 
@@ -33,6 +35,71 @@ public partial class SettingsWindow : Window
         ApplyTheme();
         ApplyLocalization();
         SwitchTab(0);
+
+        // Subscribe to device state changes
+        App.DeviceStateChanged += OnDeviceStateChanged;
+        Loaded += OnWindowLoaded;
+        Closed += OnWindowClosed;
+    }
+
+    private void OnWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        // Update initial device status
+        UpdateTouchpadStatusUI(false, 0, 0);
+    }
+
+    private void OnWindowClosed(object? sender, EventArgs e)
+    {
+        App.DeviceStateChanged -= OnDeviceStateChanged;
+    }
+
+    private void OnDeviceStateChanged(object? sender, DeviceStateEventArgs e)
+    {
+        Dispatcher.InvokeAsync(() => UpdateTouchpadStatusUI(e.IsTouchpadActive, e.TouchpadCount, e.MouseCount));
+    }
+
+    private void OnAutoDisableTouchpadChanged(object sender, RoutedEventArgs e)
+    {
+        // Show/hide touchpad status panel based on setting
+        if (TouchpadStatusPanel != null)
+        {
+            TouchpadStatusPanel.Visibility = _vm.AutoDisableOnTouchpad ? Visibility.Visible : Visibility.Collapsed;
+        }
+        // Trigger initial device status update
+        if (_vm.AutoDisableOnTouchpad)
+        {
+            Dispatcher.InvokeAsync(() => UpdateTouchpadStatusUI(false, 0, 0));
+        }
+    }
+
+    private void UpdateTouchpadStatusUI(bool isTouchpadActive, int touchpadCount, int mouseCount)
+    {
+        // Safety check - ensure controls exist
+        if (TouchpadStatusIndicator == null || TxtTouchpadStatus == null || TxtTouchpadInfo == null)
+            return;
+
+        try
+        {
+            if (isTouchpadActive)
+            {
+                // Touchpad is active - smooth scroll is disabled
+                TouchpadStatusIndicator.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(239, 68, 68)); // Red
+                TxtTouchpadStatus.Text = LocalizationManager.Get("TouchpadActive");
+                TxtTouchpadInfo.Text = LocalizationManager.Get("TouchpadActiveDesc");
+            }
+            else
+            {
+                // External mouse is active - smooth scroll is enabled
+                TouchpadStatusIndicator.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(34, 197, 94)); // Green
+                TxtTouchpadStatus.Text = LocalizationManager.Get("TouchpadInactive");
+                string template = LocalizationManager.Get("TouchpadInactiveDesc");
+                TxtTouchpadInfo.Text = string.Format(template, touchpadCount, mouseCount);
+            }
+        }
+        catch (Exception)
+        {
+            // Silently handle any UI update errors
+        }
     }
 
     private void ApplyLocalization()
@@ -84,6 +151,7 @@ public partial class SettingsWindow : Window
         TxtAdvancedFeatures.Text  = L("AdvancedFeatures");
         ChkZoomSmoothing.Content  = L("ZoomSmoothing");
         ChkMiddleClickScroll.Content = L("MiddleClickScroll");
+        ChkAutoDisableTouchpad.Content = L("AutoDisableOnTouchpad");
         TxtMomentum.Text          = L("MomentumScrolling");
         TxtMomentumDesc.Text      = L("MomentumDesc");
         ChkMomentum.Content       = L("EnableMomentum");
