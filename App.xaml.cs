@@ -147,9 +147,9 @@ public partial class App : System.Windows.Application
             }
 
             // Check for app-specific profile
-            string procName;
+            string? procName;
             lock (_exclusionLock) { procName = _lastExcludedProcess; }
-            var profile = _settings.GetAppProfile(procName);
+            var profile = _settings.GetAppProfile(procName ?? "");
             if (profile != null && profile.Enabled)
             {
                 // Apply app profile settings temporarily
