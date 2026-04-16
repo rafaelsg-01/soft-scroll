@@ -207,23 +207,25 @@ public partial class App : System.Windows.Application
 
         bool shouldStartMinimized = _settings.StartWithWindows && _settings.StartMinimized;
 
-        // Show settings window immediately — the heavy operations (icon loading, device
-        // enumeration, refresh rate detection) have already been deferred to background
-        // threads, so startup should be instant now.
         if (!shouldStartMinimized)
         {
-            ShowSettingsWindow();
+            ShowSettingsWindow(show: true, startMinimized: false);
         }
         else
         {
+            // Show tray icon but don't show the settings window
+            ShowSettingsWindow(show: false, startMinimized: true);
             Log.Information("Starting minimized to system tray");
         }
 
         // Ensure Raw Input listener initializes on the UI thread after window creation
         if (_settings.AutoDisableOnTouchpad)
         {
-            // Initialize Raw Input after settings window is created
-            Dispatcher.InvokeAsync(() => _rawInputListener?.Initialize(_settingsWindow!));
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (_settingsWindow != null)
+                    _rawInputListener?.Initialize(_settingsWindow);
+            });
         }
 
         // Enumerate devices after Raw Input is registered
@@ -312,20 +314,38 @@ public partial class App : System.Windows.Application
         NativeMethods.timeEndPeriod(1);
     }
 
-    private void ShowSettingsWindow()
+    private void ShowSettingsWindow(bool show = true, bool startMinimized = false)
     {
         if (_vm is null) return;
+
+        // Don't show the window at all when minimized
+        if (!show) return;
+
         if (_settingsWindow == null)
         {
             _settingsWindow = new SettingsWindow(_vm);
             _settingsWindow.Closed += (_, _) => _settingsWindow = null;
             _settingsWindow.Owner = null;
-            _settingsWindow.Show();
+
+            // Apply minimized state before showing if needed
+            if (startMinimized)
+            {
+                _settingsWindow.WindowState = WindowState.Minimized;
+                _settingsWindow.Show();
+                // Ensure it doesn't flash on taskbar
+                _settingsWindow.ShowInTaskbar = false;
+            }
+            else
+            {
+                _settingsWindow.Show();
+            }
         }
         else
         {
             if (_settingsWindow.WindowState == WindowState.Minimized)
                 _settingsWindow.WindowState = WindowState.Normal;
+            _settingsWindow.Show();
+            _settingsWindow.ShowInTaskbar = true;
             _settingsWindow.Activate();
         }
     }
