@@ -130,6 +130,7 @@ public partial class App : System.Windows.Application
         {
             if (!_settings.Enabled) return;
             if (IsExcludedApp()) return;
+            if (IsOwnWindow()) return;
 
             // Auto-disable on touchpad if setting is enabled
             if (_settings.AutoDisableOnTouchpad)
@@ -166,6 +167,7 @@ public partial class App : System.Windows.Application
         {
             if (!_settings.Enabled) return;
             if (IsExcludedApp()) return;
+            if (IsOwnWindow()) return;
 
             // Auto-disable on touchpad if setting is enabled
             if (_settings.AutoDisableOnTouchpad)
@@ -184,6 +186,7 @@ public partial class App : System.Windows.Application
         {
             if (!_settings.Enabled || !_settings.ZoomSmoothing) return;
             if (IsExcludedApp()) return;
+            if (IsOwnWindow()) return;
 
             args.Handled = true;
             _zoomEngine!.OnZoom(args.Delta);
@@ -243,6 +246,35 @@ public partial class App : System.Windows.Application
         _tray?.UpdateEnabled(newState);
         UpdateHookState();
         Log.Information("Soft Scroll {State}", newState ? "enabled" : "disabled");
+    }
+
+    private bool _isOwnWindow;
+    private IntPtr _lastForegroundWindow;
+    private long _lastOwnWindowCheck;
+    private const long OWN_WINDOW_CHECK_MS = 50;
+    private readonly int _ownProcessId = Environment.ProcessId;
+
+    private bool IsOwnWindow()
+    {
+        var now = Environment.TickCount64;
+        if (now - _lastOwnWindowCheck <= OWN_WINDOW_CHECK_MS)
+            return _isOwnWindow;
+        _lastOwnWindowCheck = now;
+
+        IntPtr hwnd = NativeMethods.GetForegroundWindow();
+        if (hwnd == _lastForegroundWindow)
+            return _isOwnWindow;
+
+        _lastForegroundWindow = hwnd;
+        if (hwnd == IntPtr.Zero)
+        {
+            _isOwnWindow = false;
+            return false;
+        }
+
+        NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+        _isOwnWindow = pid == (uint)_ownProcessId;
+        return _isOwnWindow;
     }
 
     private bool IsExcludedApp()
