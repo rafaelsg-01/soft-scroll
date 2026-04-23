@@ -489,7 +489,7 @@
                             </Border>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="Soft Scroll" FontSize="15" FontWeight="SemiBold"/>
-                                <TextBlock Text="v0.3.0" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                                <TextBlock Text="v0.3.1" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
