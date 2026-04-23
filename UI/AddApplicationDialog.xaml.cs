@@ -9,18 +9,31 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using SoftScroll.Infrastructure;
 
-namespace SoftScroll;
+namespace SoftScroll.UI;
 
 public partial class AddApplicationDialog : Window
 {
     public string? SelectedProcessName { get; private set; }
+    public string? SelectedAppName { get; private set; }
 
     public AddApplicationDialog()
     {
         InitializeComponent();
         ApplyTheme();
+        ApplyLocalization();
         LoadRunningProcesses();
+    }
+
+    private void ApplyLocalization()
+    {
+        var L = new Func<string, string>(LocalizationManager.Get);
+        this.Title = L("AddApplicationTitle");
+        TxtSelectApplication.Text = L("SelectApplicationToExclude");
+        BtnBrowse.Content = L("Browse");
+        BtnAdd.Content = L("Add");
+        BtnCancel.Content = L("Cancel");
     }
 
     private void ApplyTheme()
@@ -95,6 +108,7 @@ public partial class AddApplicationDialog : Window
                     processes.Add(new ProcessInfo
                     {
                         Name = proc.ProcessName,
+                        Title = proc.MainWindowTitle,
                         Icon = icon
                     });
                 }
@@ -106,7 +120,7 @@ public partial class AddApplicationDialog : Window
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[AddApplicationDialog] Error loading processes: {ex.Message}");
+            Serilog.Log.Warning(ex, "[AddApplicationDialog] Error loading processes");
         }
 
         ProcessList.ItemsSource = processes.OrderBy(p => p.Name).ToList();
@@ -153,13 +167,17 @@ public partial class AddApplicationDialog : Window
         if (ProcessList.SelectedItem is ProcessInfo selected)
         {
             SelectedProcessName = selected.Name;
+            SelectedAppName = selected.Title ?? selected.Name;
             DialogResult = true;
             Close();
         }
         else
         {
-            System.Windows.MessageBox.Show("Please select an application from the list.", 
-                "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(
+                LocalizationManager.Get("NoSelectionMsg"),
+                LocalizationManager.Get("NoSelectionTitle"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
     }
 
@@ -167,7 +185,7 @@ public partial class AddApplicationDialog : Window
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "Select Application",
+            Title = LocalizationManager.Get("SelectApplication"),
             Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)
         };
@@ -175,6 +193,7 @@ public partial class AddApplicationDialog : Window
         if (dialog.ShowDialog() == true)
         {
             SelectedProcessName = Path.GetFileNameWithoutExtension(dialog.FileName);
+            SelectedAppName = Path.GetFileNameWithoutExtension(dialog.FileName);
             DialogResult = true;
             Close();
         }
@@ -189,6 +208,7 @@ public partial class AddApplicationDialog : Window
     private class ProcessInfo
     {
         public string Name { get; set; } = "";
+        public string? Title { get; set; }
         public ImageSource? Icon { get; set; }
     }
 }

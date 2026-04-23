@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using Microsoft.Win32;
 
-namespace SoftScroll;
+namespace SoftScroll.Infrastructure;
 
 /// <summary>
 /// Manages application startup with Windows via Registry.
@@ -22,7 +22,7 @@ public static class StartupManager
             using var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
             if (key == null)
             {
-                Debug.WriteLine("[StartupManager] Failed to open Run registry key.");
+                Serilog.Log.Warning("[StartupManager] Failed to open Run registry key.");
                 return;
             }
 
@@ -32,18 +32,18 @@ public static class StartupManager
                 if (!string.IsNullOrEmpty(exePath))
                 {
                     key.SetValue(AppName, $"\"{exePath}\"");
-                    Debug.WriteLine($"[StartupManager] Added startup entry: {exePath}");
+                    Serilog.Log.Information("[StartupManager] Added startup entry: {Path}", exePath);
                 }
             }
             else
             {
                 key.DeleteValue(AppName, throwOnMissingValue: false);
-                Debug.WriteLine("[StartupManager] Removed startup entry.");
+                Serilog.Log.Information("[StartupManager] Removed startup entry.");
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[StartupManager] Error: {ex.Message}");
+            Serilog.Log.Warning(ex, "[StartupManager] Error: {Message}", ex.Message);
         }
     }
 
@@ -59,7 +59,7 @@ public static class StartupManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[StartupManager] Error checking startup: {ex.Message}");
+            Serilog.Log.Warning(ex, "[StartupManager] Error checking startup");
             return false;
         }
     }

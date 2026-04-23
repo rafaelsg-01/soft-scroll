@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Window -->
+  <data name="WindowTitle" xml:space="preserve"><value>Soft Scroll - Settings</value></data>
+  <data name="WindowTitleSaved" xml:space="preserve"><value>Soft Scroll - Settings (saved)</value></data>
+  <data name="AppTagline" xml:space="preserve"><value>Smooth scrolling for Windows</value></data>
+
+  <!-- Nav -->
+  <data name="NavScrolling" xml:space="preserve"><value>  🖱  Scrolling</value></data>
+  <data name="NavBehavior" xml:space="preserve"><value>  ⚙  Behavior</value></data>
+  <data name="NavAppProfiles" xml:space="preserve"><value>  📱  App Profiles</value></data>
+  <data name="NavVisual" xml:space="preserve"><value>  ✨  Visual Feedback</value></data>
+  <data name="NavAccessibility" xml:space="preserve"><value>  ♿  Accessibility</value></data>
+  <data name="NavStats" xml:space="preserve"><value>  📊  Statistics</value></data>
+  <data name="NavExcludedApps" xml:space="preserve"><value>  🚫  Excluded Apps</value></data>
+  <data name="NavAbout" xml:space="preserve"><value>  ℹ  About</value></data>
+
+  <!-- App Profiles Tab -->
+  <data name="AppProfilesTitle" xml:space="preserve"><value>App Profiles</value></data>
+  <data name="AppProfilesDesc" xml:space="preserve"><value>Configure custom scroll settings for specific applications. Settings are automatically applied when you switch to that app.</value></data>
+  <data name="EnableAppProfiles" xml:space="preserve"><value>Enable app-specific profiles</value></data>
+  <data name="AddProfile" xml:space="preserve"><value>Add Profile…</value></data>
+  <data name="ApplicationProfiles" xml:space="preserve"><value>Application Profiles</value></data>
+
+  <!-- Scrolling Tab -->
+  <data name="ScrollingTitle" xml:space="preserve"><value>Scrolling</value></data>
+  <data name="ScrollingDesc" xml:space="preserve"><value>Configure how smooth scrolling behaves on your system.</value></data>
+  <data name="QuickPresets" xml:space="preserve"><value>Quick Presets</value></data>
+  <data name="QuickPresetsDesc" xml:space="preserve"><value>Apply a preset to quickly configure all scroll parameters.</value></data>
+  <data name="PresetDefault" xml:space="preserve"><value>Default</value></data>
+  <data name="PresetReading" xml:space="preserve"><value>Reading</value></data>
+  <data name="PresetProductivity" xml:space="preserve"><value>Productivity</value></data>
+  <data name="PresetGaming" xml:space="preserve"><value>Gaming</value></data>
+  <data name="Parameters" xml:space="preserve"><value>Parameters</value></data>
+  <data name="StepSize" xml:space="preserve"><value>Step size</value></data>
+  <data name="AnimationTime" xml:space="preserve"><value>Animation time</value></data>
+  <data name="AccelerationDelta" xml:space="preserve"><value>Acceleration delta</value></data>
+  <data name="AccelerationMax" xml:space="preserve"><value>Acceleration max</value></data>
+  <data name="TailToHeadRatio" xml:space="preserve"><value>Tail to head ratio</value></data>
+  <data name="EasingCurve" xml:space="preserve"><value>Easing curve</value></data>
+
+  <!-- Behavior Tab -->
+  <data name="BehaviorTitle" xml:space="preserve"><value>Behavior</value></data>
+  <data name="BehaviorDesc" xml:space="preserve"><value>Control how scrolling features are applied across your system.</value></data>
+  <data name="ScrollFeatures" xml:space="preserve"><value>Scroll Features</value></data>
+  <data name="EnableSmoothScrolling" xml:space="preserve"><value>Enable smooth scrolling</value></data>
+  <data name="AnimationEasing" xml:space="preserve"><value>Animation easing</value></data>
+  <data name="HorizontalScrolling" xml:space="preserve"><value>Horizontal Scrolling</value></data>
+  <data name="ShiftKeyHorizontal" xml:space="preserve"><value>Use Shift key for horizontal scroll</value></data>
+  <data name="SmoothHorizontal" xml:space="preserve"><value>Apply smooth scrolling to horizontal</value></data>
+  <data name="Direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="ReverseWheel" xml:space="preserve"><value>Reverse wheel direction</value></data>
+
+  <!-- Advanced Features -->
+  <data name="AdvancedFeatures" xml:space="preserve"><value>Advanced Features</value></data>
+  <data name="ZoomSmoothing" xml:space="preserve"><value>Smooth Ctrl+Zoom</value></data>
+  <data name="MiddleClickScroll" xml:space="preserve"><value>Enhanced middle-click scroll</value></data>
+  <data name="AutoDisableOnTouchpad" xml:space="preserve"><value>Auto-disable on touchpad</value></data>
+  <data name="AutoDisableOnTouchpadDesc" xml:space="preserve"><value>Automatically disable smooth scrolling when using the laptop touchpad. Useful since touchpads already have smooth, inertial scrolling built in.</value></data>
+  <data name="MomentumScrolling" xml:space="preserve"><value>Momentum Scrolling</value></data>
+  <data name="MomentumDesc" xml:space="preserve"><value>Content continues drifting after you stop scrolling.</value></data>
+  <data name="EnableMomentum" xml:space="preserve"><value>Enable momentum (inertia)</value></data>
+  <data name="Friction" xml:space="preserve"><value>Friction</value></data>
+  <data name="CurvePreview" xml:space="preserve"><value>Curve Preview</value></data>
+
+  <!-- Visual Feedback Tab -->
+  <data name="VisualFeedbackTitle" xml:space="preserve"><value>Visual Feedback</value></data>
+  <data name="VisualFeedbackDesc" xml:space="preserve"><value>Customize the visual indicators and feedback during scrolling.</value></data>
+  <data name="ScrollIndicator" xml:space="preserve"><value>Scroll Indicator</value></data>
+  <data name="ShowScrollIndicator" xml:space="preserve"><value>Show scroll speed indicator</value></data>
+  <data name="IndicatorPosition" xml:space="preserve"><value>Indicator Position</value></data>
+  <data name="IndicatorDuration" xml:space="preserve"><value>Indicator Duration</value></data>
+  <data name="MiddleClickOverlay" xml:space="preserve"><value>Middle-Click Overlay</value></data>
+  <data name="MiddleClickOverlayDesc" xml:space="preserve"><value>Customize the visual indicator shown during middle-click scrolling.</value></data>
+  <data name="CursorSize" xml:space="preserve"><value>Cursor Size</value></data>
+  <data name="EdgeBounce" xml:space="preserve"><value>Edge Bounce</value></data>
+  <data name="EnableEdgeBounce" xml:space="preserve"><value>Enable edge bounce effect</value></data>
+  <data name="BounceStrength" xml:space="preserve"><value>Bounce Strength</value></data>
+
+  <!-- Accessibility Tab -->
+  <data name="AccessibilityTitle" xml:space="preserve"><value>Accessibility</value></data>
+  <data name="AccessibilityDesc" xml:space="preserve"><value>Accessibility features to assist users with different needs.</value></data>
+  <data name="ScreenReaderAnnouncements" xml:space="preserve"><value>Screen Reader Announcements</value></data>
+  <data name="EnableScreenReader" xml:space="preserve"><value>Enable screen reader announcements</value></data>
+  <data name="AnnounceSpeedChanges" xml:space="preserve"><value>Announce scroll speed changes</value></data>
+  <data name="AnnounceScrollPosition" xml:space="preserve"><value>Announce scroll position</value></data>
+  <data name="HighContrastMode" xml:space="preserve"><value>High Contrast Mode</value></data>
+  <data name="EnableHighContrast" xml:space="preserve"><value>Enable high contrast mode</value></data>
+  <data name="HighContrastDesc" xml:space="preserve"><value>Uses higher contrast colors for better visibility.</value></data>
+  <data name="AudioFeedback" xml:space="preserve"><value>Audio Feedback</value></data>
+  <data name="EnableAudioFeedback" xml:space="preserve"><value>Enable audio feedback</value></data>
+  <data name="Volume" xml:space="preserve"><value>Volume</value></data>
+  <data name="SoundType" xml:space="preserve"><value>Sound Type</value></data>
+  <data name="SoundSoftTick" xml:space="preserve"><value>Soft Tick</value></data>
+  <data name="SoundClick" xml:space="preserve"><value>Click</value></data>
+  <data name="SoundCustom" xml:space="preserve"><value>Custom</value></data>
+
+  <!-- Statistics Tab -->
+  <data name="StatisticsTitle" xml:space="preserve"><value>Statistics</value></data>
+  <data name="StatisticsDesc" xml:space="preserve"><value>View your scrolling statistics and usage patterns.</value></data>
+  <data name="SessionStatistics" xml:space="preserve"><value>Session Statistics</value></data>
+  <data name="ScrollEvents" xml:space="preserve"><value>Scroll Events</value></data>
+  <data name="PixelsScrolled" xml:space="preserve"><value>Pixels Scrolled</value></data>
+  <data name="SessionDuration" xml:space="preserve"><value>Session Duration</value></data>
+  <data name="AllTimeStatistics" xml:space="preserve"><value>All-Time Statistics</value></data>
+  <data name="TotalScrollEvents" xml:space="preserve"><value>Total Scroll Events</value></data>
+  <data name="TotalPixels" xml:space="preserve"><value>Total Pixels</value></data>
+  <data name="ResetSession" xml:space="preserve"><value>Reset Session</value></data>
+  <data name="ResetAllStatistics" xml:space="preserve"><value>Reset All Statistics</value></data>
+  <data name="ResetStatisticsConfirm" xml:space="preserve"><value>Are you sure you want to reset all statistics?</value></data>
+  <data name="ResetStatisticsTitle" xml:space="preserve"><value>Reset Statistics</value></data>
+
+  <!-- Excluded Apps Tab -->
+  <data name="ExcludedAppsTitle" xml:space="preserve"><value>Excluded Apps</value></data>
+  <data name="ExcludedAppsDesc" xml:space="preserve"><value>Smooth scrolling will be disabled for these applications. Focus on an app before opening Settings, then click Add.</value></data>
+  <data name="AddApp" xml:space="preserve"><value>Add App…</value></data>
+  <data name="RemoveSelected" xml:space="preserve"><value>Remove Selected</value></data>
+  <data name="NoSelectionTitle" xml:space="preserve"><value>No Selection</value></data>
+  <data name="NoSelectionMsg" xml:space="preserve"><value>Please select an application from the list to remove.</value></data>
+
+  <!-- About Tab -->
+  <data name="AboutTitle" xml:space="preserve"><value>About</value></data>
+  <data name="AboutDesc" xml:space="preserve"><value>Application information and system settings.</value></data>
+  <data name="MadeWith" xml:space="preserve"><value>Made with ❤ for a better scrolling experience.</value></data>
+  <data name="System" xml:space="preserve"><value>System</value></data>
+  <data name="StartWithWindows" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="StartMinimized" xml:space="preserve"><value>Start minimized (hide window)</value></data>
+  <data name="ResetTitle" xml:space="preserve"><value>Reset</value></data>
+  <data name="ResetDesc" xml:space="preserve"><value>Restore all settings to their factory defaults.</value></data>
+  <data name="ResetToDefaults" xml:space="preserve"><value>Reset to Defaults</value></data>
+  <data name="Language" xml:space="preserve"><value>Language</value></data>
+
+  <!-- Tray Icon -->
+  <data name="TraySettings" xml:space="preserve"><value>Settings...</value></data>
+  <data name="TrayEnabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="TrayDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="TrayTouchpadActive" xml:space="preserve"><value>Touchpad Active</value></data>
+  <data name="TrayToggleHotkey" xml:space="preserve"><value>Toggle with Ctrl+Alt+S</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>Exit</value></data>
+  <data name="AppName" xml:space="preserve"><value>Soft Scroll</value></data>
+
+  <!-- Footer -->
+  <data name="FooterHint" xml:space="preserve"><value>Changes are applied when you click Save.</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+
+  <!-- Touchpad Detection Status -->
+  <data name="TouchpadActive" xml:space="preserve"><value>Touchpad detected — Smooth scroll disabled</value></data>
+  <data name="TouchpadActiveDesc" xml:space="preserve"><value>Touchpad input detected. Smooth scrolling is currently disabled to avoid conflicts with the built-in touchpad inertia.</value></data>
+  <data name="TouchpadInactive" xml:space="preserve"><value>External mouse active — Smooth scroll enabled</value></data>
+  <data name="TouchpadInactiveDesc" xml:space="preserve"><value>External mouse detected ({0} touchpad(s), {1} mouse(es)). Smooth scrolling is enabled.</value></data>
+</root>
