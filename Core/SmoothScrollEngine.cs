@@ -30,6 +30,15 @@ public sealed class SmoothScrollEngine : IDisposable
     private static int? DisplayRefreshRate;
     private static readonly object _refreshLock = new();
 
+    private enum ScrollAxis
+    {
+        None,
+        Vertical,
+        Horizontal
+    }
+
+    private ScrollAxis _lastAxis = ScrollAxis.None;
+
     // Adaptive frame rate: match display Hz for smoothness, drop to 60fps when idle
     private double _targetFrameMs = 1000.0 / 120; // default 120fps for new instances
     private long _lastWorkTime;
@@ -90,9 +99,15 @@ public sealed class SmoothScrollEngine : IDisposable
     {
         lock (_lock)
         {
+            if (_lastAxis == ScrollAxis.Horizontal)
+            {
+                _h = new();
+            }
+
             var dir = _s.ReverseWheelDirection ? -1 : 1;
             var now = Environment.TickCount64;
             _v.RegisterNotch(now, delta * dir, _s);
+            _lastAxis = ScrollAxis.Vertical;
         }
         _signal.Set();
     }
@@ -112,9 +127,16 @@ public sealed class SmoothScrollEngine : IDisposable
     {
         lock (_lock)
         {
-            var dir = _s.ReverseWheelDirection ? -1 : 1;
+            if (_lastAxis == ScrollAxis.Vertical)
+            {
+                _v = new();
+            }
+
+            // No ReverseWheelDirection for horizontal: scrolling right (positive delta)
+            // must always mean "scroll right" per Windows convention.
             var now = Environment.TickCount64;
-            _h.RegisterNotch(now, delta * dir, _s);
+            _h.RegisterNotch(now, delta, _s);
+            _lastAxis = ScrollAxis.Horizontal;
         }
         _signal.Set();
     }
@@ -199,20 +221,31 @@ public sealed class SmoothScrollEngine : IDisposable
 
     private static void SendWheel(int mouseData, int hMouseData)
     {
-        var size = Marshal.SizeOf<NativeMethods.INPUT>();
-
-        // Emit vertical and horizontal in a single SendInput call to reduce P/Invoke overhead
+        // Horizontal scroll uses PostMessageW + WM_MOUSEWHEEL + MK_SHIFT.
+        // Vertical scroll uses SendInput + MOUSEEVENTF_WHEEL.
+        // Both axes are independent — each uses its own data.
         if (hMouseData != 0)
         {
-            var inputs = new NativeMethods.INPUT[]
+            if (NativeMethods.GetCursorPos(out var pt))
             {
-                new() { type = 0, U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData } } },
-                new() { type = 0, U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_HWHEEL, mouseData = hMouseData } } },
-            };
-            NativeMethods.SendInput(2, inputs, size);
+                var hwnd = NativeMethods.WindowFromPoint(pt);
+                if (hwnd != IntPtr.Zero)
+                {
+                    hwnd = NativeMethods.GetAncestor(hwnd, NativeMethods.GA_ROOT);
+                    if (hwnd != IntPtr.Zero)
+                    {
+                        // wParam: MK_SHIFT | (wheelData << 16) — encode delta in high word
+                        IntPtr wParam = (IntPtr)((uint)hMouseData << 16 | NativeMethods.MK_SHIFT);
+                        IntPtr lParam = (IntPtr)((pt.y << 16) | (pt.x & 0xFFFF));
+                        NativeMethods.PostMessageW(hwnd, NativeMethods.WM_MOUSEWHEEL, wParam, lParam);
+                    }
+                }
+            }
         }
-        else if (mouseData != 0)
+
+        if (mouseData != 0)
         {
+            var size = Marshal.SizeOf<NativeMethods.INPUT>();
             var inp = new NativeMethods.INPUT
             {
                 type = 0,
@@ -222,6 +255,14 @@ public sealed class SmoothScrollEngine : IDisposable
                 }
             };
             NativeMethods.SendInput(1, [inp], size);
+        }
+    }
+
+    public void ResetHorizontalAxis()
+    {
+        lock (_lock)
+        {
+            _h = new();
         }
     }
 

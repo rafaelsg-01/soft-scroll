@@ -157,6 +157,13 @@ public partial class SettingsWindow : Window
         ChkMomentum.Content       = L("EnableMomentum");
         TxtFriction.Text          = L("Friction");
 
+        TxtDisableWhileHeld.Text = L("DisableWhileHeldTitle");
+        TxtDisableWhileHeldDesc.Text = L("DisableWhileHeldDesc");
+        ChkDisableCtrl.Content = L("DisableWhileHoldingCtrl");
+        ChkDisableShift.Content = L("DisableWhileHoldingShift");
+        ChkDisableAlt.Content = L("DisableWhileHoldingAlt");
+        ChkDisableMiddle.Content = L("DisableWhileHoldingMiddle");
+
         // Curve preview (Scrolling tab)
         TxtCurvePreview.Text      = L("CurvePreview");
 
@@ -209,6 +216,8 @@ public partial class SettingsWindow : Window
         TxtAppsDesc.Text  = L("ExcludedAppsDesc");
         BtnAddApp.Content    = L("AddApp");
         BtnRemoveApp.Content = L("RemoveSelected");
+        ChkWhitelistMode.Content = L("WhitelistMode");
+        TxtWhitelistModeDesc.Text = L("WhitelistModeDesc");
 
         // App Profiles tab
         TxtAppProfilesTitle.Text = L("AppProfilesTitle");

@@ -35,6 +35,11 @@ public partial class App : System.Windows.Application
     private long _lastExcludedCheck;
     private const long EXCLUSION_CHECK_MS = 50;
 
+    // Disable-while-held: track modifier keys and middle button state
+    private readonly KeyboardStateSampler _disableKeysSampler = new();
+    private volatile bool _middleButtonHeld;
+    private bool _disableWhileHoldingInitialized;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         LoggingConfig.Configure();
@@ -129,6 +134,7 @@ public partial class App : System.Windows.Application
         _hook.MouseWheel += (_, args) =>
         {
             if (!_settings.Enabled) return;
+            if (IsDisabledByHold()) return;
             if (IsExcludedApp()) return;
             if (IsOwnWindow()) return;
 
@@ -153,11 +159,13 @@ public partial class App : System.Windows.Application
             var profile = _settings.GetAppProfile(procName ?? "");
             if (profile != null && profile.Enabled)
             {
+                _lastScrollWasHorizontal = false;
                 // Apply app profile settings temporarily
                 _engine!.OnWheelWithSettings(args.Delta, profile.ToAppSettings());
             }
             else
             {
+                ResetHorizontalCarryIfNeeded();
                 args.Handled = true;
                 _engine!.OnWheel(args.Delta);
                 ScrollStatistics.Instance.RecordScroll(args.Delta);
@@ -166,6 +174,7 @@ public partial class App : System.Windows.Application
         _hook.MouseHWheel += (_, args) =>
         {
             if (!_settings.Enabled) return;
+            if (IsDisabledByHold()) return;
             if (IsExcludedApp()) return;
             if (IsOwnWindow()) return;
 
@@ -179,16 +188,19 @@ public partial class App : System.Windows.Application
             }
 
             args.Handled = true;
+            _lastScrollWasHorizontal = true;
             _engine!.OnHWheel(args.Delta);
             ScrollStatistics.Instance.RecordScroll(args.Delta);
         };
         _hook.MouseZoomWheel += (_, args) =>
         {
             if (!_settings.Enabled || !_settings.ZoomSmoothing) return;
+            if (IsDisabledByHold()) return;
             if (IsExcludedApp()) return;
             if (IsOwnWindow()) return;
 
             args.Handled = true;
+            _lastScrollWasHorizontal = false;
             _zoomEngine!.OnZoom(args.Delta);
         };
         _hook.MiddleButtonDown += (_, args) =>
@@ -248,11 +260,21 @@ public partial class App : System.Windows.Application
         Log.Information("Soft Scroll {State}", newState ? "enabled" : "disabled");
     }
 
+    private bool _lastScrollWasHorizontal;
+
+    private void ResetHorizontalCarryIfNeeded()
+    {
+        if (!_lastScrollWasHorizontal)
+            return;
+
+        _engine?.ResetHorizontalAxis();
+        _lastScrollWasHorizontal = false;
+    }
+    private const long OWN_WINDOW_CHECK_MS = 50;
+    private readonly int _ownProcessId = Environment.ProcessId;
     private bool _isOwnWindow;
     private IntPtr _lastForegroundWindow;
     private long _lastOwnWindowCheck;
-    private const long OWN_WINDOW_CHECK_MS = 50;
-    private readonly int _ownProcessId = Environment.ProcessId;
 
     private bool IsOwnWindow()
     {
@@ -285,7 +307,49 @@ public partial class App : System.Windows.Application
             _lastExcludedProcess = CachedProcessHelper.GetProcessUnderCursor();
             _lastExcludedCheck = now;
         }
+        if (_settings.IsWhitelistMode)
+            return !_settings.IsWhitelisted(_lastExcludedProcess);
         return _settings.IsExcluded(_lastExcludedProcess);
+    }
+
+    private void InitializeDisableWhileHolding()
+    {
+        if (_disableWhileHoldingInitialized) return;
+        _disableWhileHoldingInitialized = true;
+
+        var hasKeys = _settings.DisableWhileHoldingKeys.Count > 0;
+        var hasMiddle = _settings.DisableWhileHoldingMiddleButton;
+        if (!hasKeys && !hasMiddle) return;
+
+        _disableKeysSampler.Start();
+
+        if (hasMiddle)
+        {
+            _hook!.MiddleButtonDown += (_, _) => { _middleButtonHeld = true; };
+            _hook!.MiddleButtonUp += (_, _) => { _middleButtonHeld = false; };
+        }
+    }
+
+    private bool IsDisabledByHold()
+    {
+        if (!_disableWhileHoldingInitialized) return false;
+
+        foreach (var key in _settings.DisableWhileHoldingKeys)
+        {
+            var vk = key.ToUpperInvariant();
+            if (vk == "CTRL" && _disableKeysSampler.IsCtrlPressed) return true;
+            if (vk == "SHIFT" && _disableKeysSampler.IsShiftPressed) return true;
+            if (vk == "ALT" && _disableKeysSampler.IsAltPressed) return true;
+            if (vk == "WIN" || vk == "WINDOWS")
+            {
+                // Win key: check VK_LWIN or VK_RWIN via GetAsyncKeyState
+                if ((NativeMethods.GetAsyncKeyState(0x5B) & 0x8000) != 0 ||
+                    (NativeMethods.GetAsyncKeyState(0x5C) & 0x8000) != 0)
+                    return true;
+            }
+        }
+        if (_settings.DisableWhileHoldingMiddleButton && _middleButtonHeld) return true;
+        return false;
     }
 
     private void ShowScrollIndicator(int speed)
@@ -320,6 +384,7 @@ public partial class App : System.Windows.Application
             _zoomEngine?.Start();
             _middleClickEngine?.Start();
             _hook.Install();
+            InitializeDisableWhileHolding();
         }
         else
         {

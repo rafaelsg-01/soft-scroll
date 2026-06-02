@@ -2,9 +2,7 @@
 
 ## Download
 
-One-click download (Windows):
-
-[⬇️ Download latest version - 0.3.1](https://github.com/rafaelsg-01/soft-scroll/releases/download/0.3.1/SoftScroll-0.3.1.exe)
+One-click download (Windows): [⬇️ Download latest version](https://github.com/rafaelsg-01/soft-scroll/releases/latest)
 
 Note: Because the executable is not code-signed, Windows SmartScreen may warn on first run. Click “More info” → “Run anyway”.
 

@@ -58,6 +58,7 @@ internal static class NativeMethods
     internal const int MOUSEEVENTF_WHEEL = 0x0800;
     internal const int MOUSEEVENTF_HWHEEL = 0x01000;
     internal const int KEYEVENTF_KEYUP = 0x0002;
+    internal const int KEYEVENTF_UNICODE = 0x0004;
 
     internal const ushort VK_CONTROL = 0x11;
     internal const ushort VK_SHIFT = 0x10;
@@ -103,9 +104,14 @@ internal static class NativeMethods
     // ── Window / Process Queries ───────────────────────────────────
 
     internal const uint GA_ROOT = 2;
+    internal const uint MK_SHIFT = 0x0004;
+    internal const uint MK_CONTROL = 0x0008;
 
     [DllImport("user32.dll")]
     internal static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern IntPtr PostMessageW(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
 
     [DllImport("user32.dll")]
     internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
