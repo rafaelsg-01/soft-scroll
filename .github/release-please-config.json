@@ -1,0 +1,11 @@
+{
+  "release-type": "dotnet",
+  "include-component-in-tag": false,
+  "version-file": "SmoothScrollClone.csproj",
+  "packages": {
+    ".": {
+      "release-type": "dotnet",
+      "component": ""
+    }
+  }
+}
