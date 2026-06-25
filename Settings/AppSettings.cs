@@ -51,6 +51,11 @@ public sealed class AppSettings
     public List<string> ExcludedApps { get; set; } = new();
     public List<AppProfile> AppProfiles { get; set; } = new();
     public bool UseAppProfiles { get; set; } = true;
+    public bool IsWhitelistMode { get; set; } = false;
+
+    // ── Disable While Held ────────────────────────────────────────
+    public List<string> DisableWhileHoldingKeys { get; set; } = new();
+    public bool DisableWhileHoldingMiddleButton { get; set; } = false;
 
     // ── Quick Toggle ────────────────────────────────────────────────
     public bool EnableGlobalHotkey { get; set; } = true;
@@ -153,6 +158,7 @@ public sealed class AppSettings
 
         ExcludedApps ??= new List<string>();
         AppProfiles ??= new List<AppProfile>();
+        DisableWhileHoldingKeys ??= new List<string>();
 
         MiddleClickConfig ??= new MiddleClickSettings();
         Accessibility ??= new AccessibilitySettings();
@@ -184,6 +190,18 @@ public sealed class AppSettings
     public bool IsExcluded(string? processName)
     {
         if (string.IsNullOrEmpty(processName)) return false;
+        foreach (var app in ExcludedApps)
+        {
+            if (string.Equals(app, processName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
+    public bool IsWhitelisted(string? processName)
+    {
+        if (string.IsNullOrEmpty(processName)) return false;
+        if (ExcludedApps.Count == 0) return false;
         foreach (var app in ExcludedApps)
         {
             if (string.Equals(app, processName, StringComparison.OrdinalIgnoreCase))

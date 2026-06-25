@@ -5,10 +5,13 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  release:
+    types: [ published ]
 
 jobs:
   build:
     runs-on: windows-latest
+    if: github.event_name != 'release'
 
     steps:
     - uses: actions/checkout@v4
@@ -32,3 +35,54 @@ jobs:
       with:
         name: SoftScroll
         path: ./dist/SoftScroll.exe
+
+  release:
+    runs-on: windows-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Extract version from tag
+      id: version
+      run: |
+        $version = $env:GITHUB_REF_NAME -replace '^v', ''
+        Write-Host "version=$version" >> $env:GITHUB_OUTPUT
+        echo "version=$version"
+
+    - name: Update version in files
+      run: |
+        $version = "${{ steps.version.outputs.version }}"
+
+        # Update .csproj
+        (Get-Content SmoothScrollClone.csproj) -replace '<Version>[\d.]+</Version>', "<Version>$version</Version>" | Set-Content SmoothScrollClone.csproj
+
+        # Update SettingsWindow.xaml.cs
+        (Get-Content Settings/SettingsWindow.xaml.cs) -replace 'Version [\d.]+', "Version $version" | Set-Content Settings/SettingsWindow.xaml.cs
+
+        # Update .iss
+        (Get-Content installer/SoftScroll.iss) -replace '#define MyAppVersion "[\d.]+"', "#define MyAppVersion `"$version`"" | Set-Content installer/SoftScroll.iss
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Publish
+      run: dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true -p:SelfContained=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:DebugSymbols=false -o ./dist
+
+    - name: Upload to Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $version = "${{ steps.version.outputs.version }}"
+        gh release upload "v$version" ./dist/SoftScroll.exe --clobber
+      shell: bash

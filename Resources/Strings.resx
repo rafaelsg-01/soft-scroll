@@ -170,4 +170,16 @@
   <data name="TouchpadActiveDesc" xml:space="preserve"><value>Touchpad input detected. Smooth scrolling is currently disabled to avoid conflicts with the built-in touchpad inertia.</value></data>
   <data name="TouchpadInactive" xml:space="preserve"><value>External mouse active — Smooth scroll enabled</value></data>
   <data name="TouchpadInactiveDesc" xml:space="preserve"><value>External mouse detected ({0} touchpad(s), {1} mouse(es)). Smooth scrolling is enabled.</value></data>
+
+  <!-- Disable While Held -->
+  <data name="DisableWhileHeldTitle" xml:space="preserve"><value>Disable While Held</value></data>
+  <data name="DisableWhileHeldDesc" xml:space="preserve"><value>Smooth scrolling is temporarily disabled while the selected modifier key or mouse button is held down. Useful when using other scroll extensions or selecting text.</value></data>
+  <data name="DisableWhileHoldingCtrl" xml:space="preserve"><value>Disable while holding Ctrl</value></data>
+  <data name="DisableWhileHoldingShift" xml:space="preserve"><value>Disable while holding Shift</value></data>
+  <data name="DisableWhileHoldingAlt" xml:space="preserve"><value>Disable while holding Alt</value></data>
+  <data name="DisableWhileHoldingMiddle" xml:space="preserve"><value>Disable while holding middle mouse button</value></data>
+
+  <!-- Whitelist Mode -->
+  <data name="WhitelistMode" xml:space="preserve"><value>Whitelist mode</value></data>
+  <data name="WhitelistModeDesc" xml:space="preserve"><value>Only smooth scroll in the listed apps instead of excluding them. All other apps use native Windows scrolling.</value></data>
 </root>

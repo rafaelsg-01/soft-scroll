@@ -38,6 +38,7 @@ public sealed class ZoomSmoothEngine : IDisposable
             _remainingDelta = 0;
             _unitAccum = 0;
         }
+        _signal.Set();
         _thread?.Join(1000);
     }
 
@@ -54,7 +55,6 @@ public sealed class ZoomSmoothEngine : IDisposable
     {
         var sw = Stopwatch.StartNew();
         double lastMs = sw.Elapsed.TotalMilliseconds;
-        bool ctrlDown = false;
 
         while (_running)
         {
@@ -68,14 +68,8 @@ public sealed class ZoomSmoothEngine : IDisposable
 
                 if (!workAvailable)
                 {
-                    if (ctrlDown)
-                    {
-                        ReleaseCtrl();
-                        ctrlDown = false;
-                    }
                     _signal.Wait(TimeSpan.FromMilliseconds(100));
                     _signal.Reset();
-                    // Reset time base after idle to prevent frame-1 jitter
                     lastMs = sw.Elapsed.TotalMilliseconds;
                     continue;
                 }
@@ -92,12 +86,7 @@ public sealed class ZoomSmoothEngine : IDisposable
 
                 if (output != 0)
                 {
-                    if (!ctrlDown)
-                    {
-                        PressCtrl();
-                        ctrlDown = true;
-                    }
-                    SendWheel(output);
+                    EmitZoom(output);
                 }
 
                 var sleep = FRAME_MS - (sw.Elapsed.TotalMilliseconds - nowMs);
@@ -106,12 +95,9 @@ public sealed class ZoomSmoothEngine : IDisposable
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ZoomSmoothEngine worker: {ex.Message}");
+                Debug.WriteLine($"ZoomSmoothEngine worker: {ex.Message}");
             }
         }
-
-        // Cleanup: ensure Ctrl is released on exit
-        ReleaseCtrl();
     }
 
     private int Step(double dtMs)
@@ -131,7 +117,7 @@ public sealed class ZoomSmoothEngine : IDisposable
 
         _unitAccum += emit / WHEEL_DELTA;
 
-        int pulses = 0;
+        var pulses = 0;
         if (Math.Abs(_unitAccum) >= 1.0)
         {
             pulses = (int)_unitAccum;
@@ -142,34 +128,75 @@ public sealed class ZoomSmoothEngine : IDisposable
         return Math.Clamp(pulses, -5, 5) * WHEEL_DELTA;
     }
 
-    private static void PressCtrl()
+    private static void EmitZoom(int mouseData)
     {
-        var inp = new NativeMethods.INPUT
+        if (!NativeMethods.GetCursorPos(out var pt))
         {
-            type = NativeMethods.INPUT_KEYBOARD,
-            U = new NativeMethods.InputUnion { ki = new NativeMethods.KEYBDINPUT { wVk = NativeMethods.VK_CONTROL } }
-        };
-        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
+            EmitZoomViaSendInput(mouseData);
+            return;
+        }
+
+        var hwnd = NativeMethods.WindowFromPoint(pt);
+        if (hwnd != IntPtr.Zero)
+        {
+            hwnd = NativeMethods.GetAncestor(hwnd, NativeMethods.GA_ROOT);
+            if (hwnd != IntPtr.Zero)
+            {
+                var wParam = (IntPtr)((uint)mouseData << 16 | NativeMethods.MK_CONTROL);
+                var lParam = (IntPtr)((pt.y << 16) | (pt.x & 0xFFFF));
+                if (NativeMethods.PostMessageW(hwnd, NativeMethods.WM_MOUSEWHEEL, wParam, lParam) != IntPtr.Zero)
+                    return;
+            }
+        }
+
+        EmitZoomViaSendInput(mouseData);
     }
 
-    private static void ReleaseCtrl()
+    private static void EmitZoomViaSendInput(int mouseData)
     {
-        var inp = new NativeMethods.INPUT
-        {
-            type = NativeMethods.INPUT_KEYBOARD,
-            U = new NativeMethods.InputUnion { ki = new NativeMethods.KEYBDINPUT { wVk = NativeMethods.VK_CONTROL, dwFlags = NativeMethods.KEYEVENTF_KEYUP } }
-        };
-        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
-    }
+        var size = Marshal.SizeOf<NativeMethods.INPUT>();
 
-    private static void SendWheel(int mouseData)
-    {
-        var inp = new NativeMethods.INPUT
+        var inputs = new[]
         {
-            type = NativeMethods.INPUT_MOUSE,
-            U = new NativeMethods.InputUnion { mi = new NativeMethods.MOUSEINPUT { dwFlags = NativeMethods.MOUSEEVENTF_WHEEL, mouseData = mouseData } }
+            new NativeMethods.INPUT
+            {
+                type = NativeMethods.INPUT_KEYBOARD,
+                U = new NativeMethods.InputUnion
+                {
+                    ki = new NativeMethods.KEYBDINPUT
+                    {
+                        wVk = NativeMethods.VK_CONTROL,
+                        dwFlags = 0
+                    }
+                }
+            },
+            new NativeMethods.INPUT
+            {
+                type = NativeMethods.INPUT_MOUSE,
+                U = new NativeMethods.InputUnion
+                {
+                    mi = new NativeMethods.MOUSEINPUT
+                    {
+                        dwFlags = NativeMethods.MOUSEEVENTF_WHEEL,
+                        mouseData = mouseData
+                    }
+                }
+            },
+            new NativeMethods.INPUT
+            {
+                type = NativeMethods.INPUT_KEYBOARD,
+                U = new NativeMethods.InputUnion
+                {
+                    ki = new NativeMethods.KEYBDINPUT
+                    {
+                        wVk = NativeMethods.VK_CONTROL,
+                        dwFlags = NativeMethods.KEYEVENTF_KEYUP
+                    }
+                }
+            }
         };
-        NativeMethods.SendInput(1, [inp], Marshal.SizeOf<NativeMethods.INPUT>());
+
+        NativeMethods.SendInput((uint)inputs.Length, inputs, size);
     }
 
     public void Dispose() => Stop();
