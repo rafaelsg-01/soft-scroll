@@ -20,13 +20,15 @@ jobs:
       with:
         fetch-depth: 0
 
+    # Note: do NOT pass release-type input — release-please-action v4 does not
+    # have a 'dotnet' release type. The strategy lives in release-please-config.json.
     - name: Run release-please
       id: release-please
       uses: googleapis/release-please-action@v4
       with:
-        release-type: dotnet
+        config-file: release-please-config.json
+        manifest-file: .release-please-manifest.json
         target-branch: main
-        default-branch: main
 
   # Note: GitHub Release is created by release-please action
   # The release workflow (build.yml) will be triggered by the release event
