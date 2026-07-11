@@ -20,13 +20,16 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Note: do NOT pass release-type input — release-please-action v4 does not
-    # have a 'dotnet' release type. The strategy lives in release-please-config.json.
+    # Note: pass release-type: simple at the action level — release-please-action
+    # v4 requires this. The package-specific config (release-type: simple plus
+    # extra-files for the csproj XML updaters) lives in release-please-config.json.
     - name: Run release-please
       id: release-please
       uses: googleapis/release-please-action@v4
       with:
+        release-type: simple
         config-file: release-please-config.json
+        manifest-file: .release-please-manifest.json
         target-branch: main
 
   # Note: GitHub Release is created by release-please action
