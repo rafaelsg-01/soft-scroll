@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -232,7 +232,7 @@ public partial class SettingsWindow : Window
         TxtAboutDesc.Text   = L("AboutDesc");
         TxtAppName.Text = "Soft Scroll";
         TxtAppTagline.Text = L("AppTagline");
-        TxtVersion.Text = "Version 0.3.1";
+        TxtVersion.Text = "Version 0.3.2";
         TxtMadeWith.Text    = L("MadeWith");
         TxtLanguageLabel.Text = L("Language");
         TxtSystemLabel.Text      = L("System");
