@@ -13,6 +13,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     {
         ExcludedApps = new ObservableCollection<string>();
         AppProfiles = new ObservableCollection<AppProfile>();
+        DisableWhileHoldingKeys = new ObservableCollection<string>();
         Apply(settings);
     }
 
@@ -39,6 +40,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         AutoDisableOnTouchpad = s.AutoDisableOnTouchpad;
         Language = s.Language;
         UseAppProfiles = s.UseAppProfiles;
+        IsWhitelistMode = s.IsWhitelistMode;
 
         // Visual feedback settings
         ShowScrollIndicator = s.ShowScrollIndicator;
@@ -51,6 +53,11 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         MiddleClickInvertDirection = s.MiddleClickConfig.InvertScrollDirection;
         MiddleClickEnableEdgeBounce = s.MiddleClickConfig.EnableEdgeBounce;
         MiddleClickBounceStrength = s.MiddleClickConfig.BounceStrength;
+
+        DisableWhileHoldingMiddleButton = s.DisableWhileHoldingMiddleButton;
+        DisableCtrlWhileHeld = s.DisableWhileHoldingKeys.Contains("CTRL");
+        DisableShiftWhileHeld = s.DisableWhileHoldingKeys.Contains("SHIFT");
+        DisableAltWhileHeld = s.DisableWhileHoldingKeys.Contains("ALT");
 
         // Accessibility settings
         EnableScreenReaderAnnouncements = s.Accessibility.EnableScreenReaderAnnouncements;
@@ -68,6 +75,10 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         AppProfiles.Clear();
         foreach (var profile in s.AppProfiles)
             AppProfiles.Add(profile);
+
+        DisableWhileHoldingKeys.Clear();
+        foreach (var key in s.DisableWhileHoldingKeys)
+            DisableWhileHoldingKeys.Add(key);
     }
 
     public AppSettings Snapshot() => new()
@@ -94,6 +105,10 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         AutoDisableOnTouchpad = AutoDisableOnTouchpad,
         ExcludedApps = new List<string>(ExcludedApps),
         UseAppProfiles = UseAppProfiles,
+        IsWhitelistMode = IsWhitelistMode,
+        DisableWhileHoldingMiddleButton = DisableWhileHoldingMiddleButton,
+        DisableWhileHoldingKeys = BuildDisableKeysList(),
+
         AppProfiles = new List<AppProfile>(AppProfiles),
         ShowScrollIndicator = ShowScrollIndicator,
         ScrollIndicatorDurationMs = ScrollIndicatorDurationMs,
@@ -197,6 +212,32 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _useAppProfiles = true;
     public bool UseAppProfiles { get => _useAppProfiles; set { if (Set(ref _useAppProfiles, value)) OnSettingsChanged(); } }
 
+    private bool _isWhitelistMode;
+    public bool IsWhitelistMode { get => _isWhitelistMode; set { if (Set(ref _isWhitelistMode, value)) OnSettingsChanged(); } }
+
+    private bool _disableWhileHoldingMiddleButton;
+    public bool DisableWhileHoldingMiddleButton { get => _disableWhileHoldingMiddleButton; set { if (Set(ref _disableWhileHoldingMiddleButton, value)) OnSettingsChanged(); } }
+
+    private bool _disableCtrlWhileHeld;
+    public bool DisableCtrlWhileHeld { get => _disableCtrlWhileHeld; set { if (Set(ref _disableCtrlWhileHeld, value)) OnSettingsChanged(); } }
+
+    private bool _disableShiftWhileHeld;
+    public bool DisableShiftWhileHeld { get => _disableShiftWhileHeld; set { if (Set(ref _disableShiftWhileHeld, value)) OnSettingsChanged(); } }
+
+    private bool _disableAltWhileHeld;
+    public bool DisableAltWhileHeld { get => _disableAltWhileHeld; set { if (Set(ref _disableAltWhileHeld, value)) OnSettingsChanged(); } }
+
+    public ObservableCollection<string> DisableWhileHoldingKeys { get; }
+
+    private List<string> BuildDisableKeysList()
+    {
+        var list = new List<string>();
+        if (DisableCtrlWhileHeld) list.Add("CTRL");
+        if (DisableShiftWhileHeld) list.Add("SHIFT");
+        if (DisableAltWhileHeld) list.Add("ALT");
+        return list;
+    }
+
     // Visual feedback settings
     private bool _showScrollIndicator;
     public bool ShowScrollIndicator { get => _showScrollIndicator; set { if (Set(ref _showScrollIndicator, value)) OnSettingsChanged(); } }
@@ -279,6 +320,25 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     public void RemoveAppProfile(AppProfile profile)
     {
         if (AppProfiles.Remove(profile))
+        {
+            OnSettingsChanged();
+        }
+    }
+
+    public void AddDisableKey(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return;
+        var normalized = key.ToUpperInvariant();
+        if (!DisableWhileHoldingKeys.Contains(normalized))
+        {
+            DisableWhileHoldingKeys.Add(normalized);
+            OnSettingsChanged();
+        }
+    }
+
+    public void RemoveDisableKey(string key)
+    {
+        if (DisableWhileHoldingKeys.Remove(key))
         {
             OnSettingsChanged();
         }

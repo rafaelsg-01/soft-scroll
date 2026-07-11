@@ -624,6 +624,16 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock x:Name="TxtDisableWhileHeld" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TxtDisableWhileHeldDesc" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                                <CheckBox x:Name="ChkDisableCtrl" IsChecked="{Binding DisableCtrlWhileHeld}" Content="Disable while holding Ctrl"/>
+                                <CheckBox x:Name="ChkDisableShift" IsChecked="{Binding DisableShiftWhileHeld}" Content="Disable while holding Shift" Margin="0,8,0,0"/>
+                                <CheckBox x:Name="ChkDisableAlt" IsChecked="{Binding DisableAltWhileHeld}" Content="Disable while holding Alt" Margin="0,8,0,0"/>
+                                <CheckBox x:Name="ChkDisableMiddle" IsChecked="{Binding DisableWhileHoldingMiddleButton}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <!-- Tab 2: Excluded Apps -->
@@ -631,17 +641,22 @@
                         <TextBlock x:Name="TxtAppsTitle" Style="{StaticResource SectionHeader}"/>
                         <TextBlock x:Name="TxtAppsDesc" Style="{StaticResource SectionDesc}"/>
                         <Border Style="{StaticResource Card}" Padding="24">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <ListBox x:Name="ExcludedAppsList" Grid.Row="0" Height="260" ItemsSource="{Binding ExcludedApps}" Margin="0,0,0,16"/>
-                                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                                    <Button x:Name="BtnAddApp" Click="OnAddApp" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
-                                    <Button x:Name="BtnRemoveApp" Click="OnRemoveApp" Style="{StaticResource SecondaryButton}" Margin="0"/>
-                                </StackPanel>
-                            </Grid>
+                            <StackPanel>
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <ListBox x:Name="ExcludedAppsList" Grid.Row="0" Height="260" ItemsSource="{Binding ExcludedApps}" Margin="0,0,0,16"/>
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                        <Button x:Name="BtnAddApp" Click="OnAddApp" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
+                                        <Button x:Name="BtnRemoveApp" Click="OnRemoveApp" Style="{StaticResource SecondaryButton}" Margin="0"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Border Height="1" Background="{DynamicResource SurfaceBorderBrush}" Margin="0,0,0,16"/>
+                                <CheckBox x:Name="ChkWhitelistMode" IsChecked="{Binding IsWhitelistMode}"/>
+                                <TextBlock x:Name="TxtWhitelistModeDesc" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
                         </Border>
                     </StackPanel>
 

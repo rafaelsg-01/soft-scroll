@@ -170,4 +170,16 @@
   <data name="TouchpadActiveDesc" xml:space="preserve"><value>检测到触控板输入。平滑滚动已禁用，以避免与内置触控板惯性冲突。</value></data>
   <data name="TouchpadInactive" xml:space="preserve"><value>外接鼠标已激活 - 平滑滚动已启用</value></data>
   <data name="TouchpadInactiveDesc" xml:space="preserve"><value>检测到外接鼠标 ({1} 个鼠标, {0} 个触控板)。平滑滚动已启用。</value></data>
+
+  <!-- Disable While Held -->
+  <data name="DisableWhileHeldTitle" xml:space="preserve"><value>按住时禁用</value></data>
+  <data name="DisableWhileHeldDesc" xml:space="preserve"><value>按住选定的修饰键或鼠标按钮时，平滑滚动会暂时禁用。适用于使用其他滚动扩展或选择文本。</value></data>
+  <data name="DisableWhileHoldingCtrl" xml:space="preserve"><value>按住 Ctrl 时禁用</value></data>
+  <data name="DisableWhileHoldingShift" xml:space="preserve"><value>按住 Shift 时禁用</value></data>
+  <data name="DisableWhileHoldingAlt" xml:space="preserve"><value>按住 Alt 时禁用</value></data>
+  <data name="DisableWhileHoldingMiddle" xml:space="preserve"><value>按住鼠标中键时禁用</value></data>
+
+  <!-- Whitelist Mode -->
+  <data name="WhitelistMode" xml:space="preserve"><value>白名单模式</value></data>
+  <data name="WhitelistModeDesc" xml:space="preserve"><value>仅在列表中的应用启用平滑滚动。其他应用使用原生 Windows 滚动。</value></data>
 </root>

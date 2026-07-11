@@ -170,4 +170,16 @@
   <data name="TouchpadActiveDesc" xml:space="preserve"><value>Phát hiện đầu vào từ touchpad. Cuộn mượt hiện bị tắt để tránh xung đột với quán tính touchpad có sẵn.</value></data>
   <data name="TouchpadInactive" xml:space="preserve"><value>Chuột ngoài đang hoạt động — Cuộn mượt bật</value></data>
   <data name="TouchpadInactiveDesc" xml:space="preserve"><value>Phát hiện chuột ngoài ({1} chuột, {0} touchpad). Cuộn mượt đang được bật.</value></data>
+
+  <!-- Disable While Held -->
+  <data name="DisableWhileHeldTitle" xml:space="preserve"><value>Tắt khi giữ</value></data>
+  <data name="DisableWhileHeldDesc" xml:space="preserve"><value>Cuộn mượt sẽ tạm thời bị tắt khi giữ phím hoặc nút chuột đã chọn. Hữu ích khi dùng tiện ích cuộn khác hoặc chọn văn bản.</value></data>
+  <data name="DisableWhileHoldingCtrl" xml:space="preserve"><value>Tắt khi giữ Ctrl</value></data>
+  <data name="DisableWhileHoldingShift" xml:space="preserve"><value>Tắt khi giữ Shift</value></data>
+  <data name="DisableWhileHoldingAlt" xml:space="preserve"><value>Tắt khi giữ Alt</value></data>
+  <data name="DisableWhileHoldingMiddle" xml:space="preserve"><value>Tắt khi giữ nút giữa chuột</value></data>
+
+  <!-- Whitelist Mode -->
+  <data name="WhitelistMode" xml:space="preserve"><value>Chế độ danh sách trắng</value></data>
+  <data name="WhitelistModeDesc" xml:space="preserve"><value>Chỉ bật cuộn mượt cho các ứng dụng trong danh sách. Các ứng dụng khác sẽ dùng cuộn mặc định của Windows.</value></data>
 </root>
