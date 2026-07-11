@@ -14,7 +14,16 @@
     <Product>Soft Scroll</Product>
     <Company>Soft Scroll</Company>
     <Description>Soft Scroll brings smooth, configurable scrolling to Windows.</Description>
+    <!--
+      Single source of truth for the app version. Runtime code reads this via
+      SoftScroll.Infrastructure.AppVersion (which inspects AssemblyInformationalVersion /
+      AssemblyVersion). The release-please workflow updates this value on each release.
+      Do NOT hard-code the version string in any .cs / .xaml source file.
+    -->
     <Version>0.3.2</Version>
+    <AssemblyVersion>0.3.2</AssemblyVersion>
+    <FileVersion>0.3.2</FileVersion>
+    <InformationalVersion>0.3.2</InformationalVersion>
 
     <!-- App executable icon -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>

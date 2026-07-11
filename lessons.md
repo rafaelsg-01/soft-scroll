@@ -44,3 +44,35 @@ args.Handled = true;
 ### Architectural lesson: dual-path inversion in input translation
 
 Whenever code translates one Windows input message into another (e.g. HWHEEL → Shift+MWHEEL), the sign convention of the target message MUST be re-derived from scratch. Document the inversion at the call site with a comment naming both messages and their conventions, otherwise the next maintainer will reintroduce the bug while "simplifying".
+
+---
+
+## 2026-07-11 — Centralize app version (single source of truth)
+
+### Symptom
+
+The version string `0.3.2` was hard-coded in three places that had to be edited in lockstep:
+
+1. `SmoothScrollClone.csproj` — `<Version>0.3.2</Version>`
+2. `Settings/SettingsWindow.xaml.cs` — `TxtVersion.Text = "Version 0.3.2"`
+3. `installer/SoftScroll.iss` — `#define MyAppVersion "0.3.2"`
+
+The GitHub Actions workflow `build.yml` partially mitigated this by replacing strings at release time, but it was fragile (regex on `[\d.]+`), drifted from `release-please` config, and required manual sync between local dev builds and CI builds.
+
+### Fix
+
+The .NET SDK already generates `AssemblyVersion`, `AssemblyFileVersion`, and `AssemblyInformationalVersion` from csproj `<Version>` properties. The fix is therefore to **never hard-code the version in source code** — always read it from assembly metadata at runtime.
+
+- Added `Infrastructure/AppVersion.cs` with two properties:
+  - `AppVersion.Informational` → full string (e.g. `0.3.2+abc123`).
+  - `AppVersion.Short` → trimmed semver (`0.3.2`), suitable for UI display.
+  - Reads `AssemblyInformationalVersionAttribute` first, falls back to `FileVersionInfo` (works for single-file published apps).
+- `SettingsWindow.xaml.cs` now does `TxtVersion.Text = $"Version {AppVersion.Short};"`.
+- csproj now declares all four version properties explicitly (`<Version>`, `<AssemblyVersion>`, `<FileVersion>`, `<InformationalVersion>`) so the displayed version is unambiguous and the git SHA is auto-appended for diagnostic builds.
+- `installer/SoftScroll.iss` is the **only** file that still needs a string literal, because Inno Setup's preprocessor runs at compile time before any runtime metadata is available. The release workflow now reads the version from csproj via regex instead of trusting a `steps.version` output, so the workflow no longer has to be edited when bumping versions.
+
+### Rule going forward
+
+**Anywhere a value is derived from project metadata (version, product name, company, copyright, repository URL, etc.), read it from assembly attributes or other auto-generated sources. Never duplicate it as a string literal in `.cs`/`.xaml` files.**
+
+If you find yourself writing `"Version 0.3.2"` in code, add the lookup to `Infrastructure/AppVersion.cs` (or a sibling helper) instead.

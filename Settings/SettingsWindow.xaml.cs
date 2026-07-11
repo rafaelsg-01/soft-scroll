@@ -232,7 +232,7 @@ public partial class SettingsWindow : Window
         TxtAboutDesc.Text   = L("AboutDesc");
         TxtAppName.Text = "Soft Scroll";
         TxtAppTagline.Text = L("AppTagline");
-        TxtVersion.Text = "Version 0.3.2";
+        TxtVersion.Text = $"Version {AppVersion.Short}";
         TxtMadeWith.Text    = L("MadeWith");
         TxtLanguageLabel.Text = L("Language");
         TxtSystemLabel.Text      = L("System");

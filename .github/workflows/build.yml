@@ -59,16 +59,18 @@ jobs:
 
     - name: Update version in files
       run: |
-        $version = "${{ steps.version.outputs.version }}"
+        # Single source of truth: read version from csproj so the workflow
+        # never has to be edited when bumping versions. Only the Inno Setup
+        # script needs a real value (its preprocessor runs at compile time
+        # before it can read runtime metadata); SettingsWindow.xaml.cs
+        # already reads the version from assembly attributes at runtime.
+        $csproj = 'SmoothScrollClone.csproj'
+        $version = (Select-String -Path $csproj -Pattern '<Version>([^<]+)</Version>' `
+                     | Select-Object -First 1).Matches[0].Groups[1].Value
+        Write-Host "Detected version from csproj: $version"
 
-        # Update .csproj
-        (Get-Content SmoothScrollClone.csproj) -replace '<Version>[\d.]+</Version>', "<Version>$version</Version>" | Set-Content SmoothScrollClone.csproj
-
-        # Update SettingsWindow.xaml.cs
-        (Get-Content Settings/SettingsWindow.xaml.cs) -replace 'Version [\d.]+', "Version $version" | Set-Content Settings/SettingsWindow.xaml.cs
-
-        # Update .iss
-        (Get-Content installer/SoftScroll.iss) -replace '#define MyAppVersion "[\d.]+"', "#define MyAppVersion `"$version`"" | Set-Content installer/SoftScroll.iss
+        # Update .iss (only file that still needs a hard-coded value)
+        (Get-Content installer/SoftScroll.iss) -replace '#define MyAppVersion "[^"]+"', "#define MyAppVersion `"$version`"" | Set-Content installer/SoftScroll.iss
 
     - name: Restore dependencies
       run: dotnet restore
