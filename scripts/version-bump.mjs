@@ -56,16 +56,29 @@ export function parseReleaseAsFooter(body) {
 
 export function parseCommitMessage(raw) {
   const lines = raw.split('\n');
-  const subjectLine = lines[0] || '';
   const body = lines.slice(2).join('\n');
 
-  const match = /^(\w+)(\([^)]*\))?(!)?:\s*(.+)$/.exec(subjectLine);
+  // Try subject line first: "fix: correct direction"
+  let subjectLine = lines[0] || '';
+  let match = /^(\w+)(\([^)]*\))?(!)?:\s*(.+)$/.exec(subjectLine);
+
+  // Merge commits: "Merge pull request #N from ..." doesn't match.
+  // Scan body/description lines for a conventional commit (PR title).
+  if (!match) {
+    for (const line of lines.slice(1)) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      match = /^(\w+)(\([^)]*\))?(!)?:\s*(.+)$/.exec(trimmed);
+      if (match) break;
+    }
+  }
+
   if (!match) return null;
 
-  const [, type, , bang, subject] = match;
+  const [, type, , bang] = match;
   const breaking = Boolean(bang) || /^BREAKING CHANGE:/m.test(body);
 
-  return { type, subject, body, breaking };
+  return { type, body, breaking };
 }
 
 export function readCurrentVersion() {

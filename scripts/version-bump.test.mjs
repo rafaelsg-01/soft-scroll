@@ -51,8 +51,18 @@ test('parseReleaseAsFooter: extracts version', () => {
 test('parseCommitMessage: parses feat', () => {
   const parsed = parseCommitMessage('feat: add feature');
   assert.equal(parsed.type, 'feat');
-  assert.equal(parsed.subject, 'add feature');
   assert.equal(parsed.breaking, false);
+});
+
+test('parseCommitMessage: parses merge commit body', () => {
+  const raw = 'Merge pull request #19 from foo/fix-scroll\n\nfix: correct scroll direction';
+  const parsed = parseCommitMessage(raw);
+  assert.equal(parsed.type, 'fix');
+  assert.equal(parsed.breaking, false);
+});
+
+test('parseCommitMessage: returns null when no conventional commit found', () => {
+  assert.equal(parseCommitMessage('Merge pull request #5 from user/branch\n\nNo conventional prefix here'), null);
 });
 
 test('parseCommitMessage: detects bang', () => {
