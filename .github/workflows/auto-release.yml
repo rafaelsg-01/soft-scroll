@@ -9,6 +9,8 @@ on:
       - '**.csproj'
       - 'installer/**'
       - 'Assets/**'
+      - 'scripts/**'
+      - '.github/workflows/auto-release.yml'
 
   workflow_dispatch:
 
