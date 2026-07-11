@@ -14,13 +14,6 @@ const REPO_ROOT = resolve(__dirname, '..');
 
 const BUMP_LEVEL = { major: 3, minor: 2, patch: 1 };
 
-const TYPE_TO_SECTION = {
-  feat: 'Added',
-  fix: 'Fixed',
-  perf: 'Performance',
-  revert: 'Changed',
-};
-
 const RELEASE_TYPES = ['feat', 'fix', 'perf', 'revert'];
 
 export function determineBump(commits) {
@@ -175,6 +168,7 @@ async function main() {
   setGithubOutput('version', newVersion);
   setGithubOutput('tag', `v${newVersion}`);
   setGithubOutput('is_prerelease', String(isPrerelease));
+  // Auto release system test trigger line
   console.log(`Done: version=${newVersion}, tag=v${newVersion}`);
 }
 
