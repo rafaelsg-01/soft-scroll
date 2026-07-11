@@ -1,0 +1,120 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.cs'
+      - '**.xaml'
+      - '**.csproj'
+      - 'installer/**'
+      - 'Assets/**'
+      - 'scripts/**'
+      - '.github/workflows/auto-release.yml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  _guard:
+    if: |
+      !(
+        github.event_name == 'push' &&
+        (
+          startsWith(github.ref, 'refs/tags/v') ||
+          contains(github.event.head_commit.message, '[skip release]')
+        )
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "Guarded: not a re-triggered run"'
+
+  bump:
+    needs: [_guard]
+    if: "!contains(github.event.head_commit.message, '[skip release]')"
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
+      is_prerelease: ${{ steps.bump.outputs.is_prerelease }}
+      skipped: ${{ steps.bump.outputs.skipped }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bump version
+        id: bump
+        run: |
+          set +e
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          HEAD_COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Last tag: $LAST_TAG"
+
+          LAST_TAG="$LAST_TAG" HEAD_COMMIT_MSG="$HEAD_COMMIT_MSG" node scripts/version-bump.mjs
+          EXIT_CODE=$?
+
+          if [ $EXIT_CODE -eq 78 ]; then
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "No release triggered."
+            exit 0
+          elif [ $EXIT_CODE -ne 0 ]; then
+            echo "version-bump.mjs failed with exit $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+
+      - name: Commit + tag + push
+        if: steps.bump.outputs.skipped != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add SmoothScrollClone.csproj installer/SoftScroll.iss
+          git commit -m "chore: release v${{ steps.bump.outputs.version }} [skip release]"
+          git tag "v${{ steps.bump.outputs.version }}"
+          git push origin main
+          git push origin "v${{ steps.bump.outputs.version }}"
+
+  build:
+    needs: bump
+    if: needs.bump.outputs.skipped != 'true'
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump.outputs.tag }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Publish
+        run: dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true -p:SelfContained=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:DebugSymbols=false -o ./dist
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.bump.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            dist/SoftScroll.exe
