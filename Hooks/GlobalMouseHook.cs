@@ -83,7 +83,16 @@ public sealed class GlobalMouseHook : IDisposable
                 }
                 else if (ShiftKeyHorizontal && _keyboard.IsShiftPressed)
                 {
-                    MouseHWheel?.Invoke(this, args);
+                    // Convert vertical wheel to horizontal: vertical wheel up (+) must
+                    // map to horizontal LEFT (Shift+MWHEEL convention). SendWheel inverts
+                    // hMouseData to compensate for the side-button HWHEEL convention
+                    // (positive = right), so we invert here too — otherwise the two
+                    // inversions cancel and Shift+wheel direction is reversed.
+                    // See GitHub issue #13.
+                    var hArgs = new MouseWheelEventArgs(-delta);
+                    MouseHWheel?.Invoke(this, hArgs);
+                    if (hArgs.Handled)
+                        args.Handled = true;
                 }
                 else
                 {

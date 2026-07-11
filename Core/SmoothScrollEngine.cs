@@ -221,8 +221,12 @@ public sealed class SmoothScrollEngine : IDisposable
 
     private static void SendWheel(int mouseData, int hMouseData)
     {
-        // Horizontal scroll uses PostMessageW + WM_MOUSEWHEEL + MK_SHIFT.
         // Vertical scroll uses SendInput + MOUSEEVENTF_WHEEL.
+        // Horizontal scroll uses PostMessageW + WM_MOUSEWHEEL + MK_SHIFT, but with
+        // an inverted delta sign. WM_MOUSEHWHEEL (positive = right) and
+        // WM_MOUSEWHEEL+MK_SHIFT (positive = up → interpreted as left by target)
+        // use opposite sign conventions, so we flip the sign to preserve the user's
+        // physical scroll direction. See GitHub issue #13.
         // Both axes are independent — each uses its own data.
         if (hMouseData != 0)
         {
@@ -234,8 +238,9 @@ public sealed class SmoothScrollEngine : IDisposable
                     hwnd = NativeMethods.GetAncestor(hwnd, NativeMethods.GA_ROOT);
                     if (hwnd != IntPtr.Zero)
                     {
-                        // wParam: MK_SHIFT | (wheelData << 16) — encode delta in high word
-                        IntPtr wParam = (IntPtr)((uint)hMouseData << 16 | NativeMethods.MK_SHIFT);
+                        // wParam: MK_SHIFT | (wheelData << 16) — encode delta in high word.
+                        // Invert hMouseData because Shift+vertical convention is opposite of HWHEEL.
+                        IntPtr wParam = (IntPtr)((uint)(-hMouseData) << 16 | NativeMethods.MK_SHIFT);
                         IntPtr lParam = (IntPtr)((pt.y << 16) | (pt.x & 0xFFFF));
                         NativeMethods.PostMessageW(hwnd, NativeMethods.WM_MOUSEWHEEL, wParam, lParam);
                     }
