@@ -24,33 +24,5 @@
       "path": "SmoothScrollClone.csproj",
       "xpath": "//Project/PropertyGroup/InformationalVersion"
     }
-  ],
-  "packages": {
-    ".": {
-      "release-type": "simple",
-      "component": "",
-      "extra-files": [
-        {
-          "type": "xml",
-          "path": "SmoothScrollClone.csproj",
-          "xpath": "//Project/PropertyGroup/Version"
-        },
-        {
-          "type": "xml",
-          "path": "SmoothScrollClone.csproj",
-          "xpath": "//Project/PropertyGroup/AssemblyVersion"
-        },
-        {
-          "type": "xml",
-          "path": "SmoothScrollClone.csproj",
-          "xpath": "//Project/PropertyGroup/FileVersion"
-        },
-        {
-          "type": "xml",
-          "path": "SmoothScrollClone.csproj",
-          "xpath": "//Project/PropertyGroup/InformationalVersion"
-        }
-      ]
-    }
-  }
+  ]
 }
