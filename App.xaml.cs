@@ -187,6 +187,12 @@ public partial class App : System.Windows.Application
                     return;
             }
 
+            // Only intercept when horizontal smoothness is enabled.
+            // When disabled, leave args.Handled = false so the native WM_MOUSEHWHEEL
+            // is delivered to the target window unchanged. See GitHub issue #13.
+            if (!_settings.HorizontalSmoothness)
+                return;
+
             args.Handled = true;
             _lastScrollWasHorizontal = true;
             _engine!.OnHWheel(args.Delta);
